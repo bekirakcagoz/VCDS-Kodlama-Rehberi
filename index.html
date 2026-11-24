@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#18202a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VCDS Rehberi">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>VCDS Kodlama Rehberi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Düzen: atölye teşhis ekranı — üstte arama, altta filtre çipleri, sonuç kartları tek sütun akış; kod/kanal adları mono */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#18202a; --muted:#5b6775; --line:#d5dbe2;
+  --accent:#d97706; --accent-ink:#ffffff; --accent-soft:#fdf0dc;
+  --code-bg:#f3f5f8; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
+  --ok-soft:#e5f4ea; --warn-soft:#fbefdc; --bad-soft:#fbe5e5;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --panel:#19212a; --ink:#e6ebf0; --muted:#94a1b0; --line:#2b3641;
+  --accent:#f59e0b; --accent-ink:#1a1206; --accent-soft:#33260f;
+  --code-bg:#0d1217; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --ok-soft:#14291c; --warn-soft:#30260f; --bad-soft:#341717; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --panel:#19212a; --ink:#e6ebf0; --muted:#94a1b0; --line:#2b3641;
+  --accent:#f59e0b; --accent-ink:#1a1206; --accent-soft:#33260f;
+  --code-bg:#0d1217; --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+  --ok-soft:#14291c; --warn-soft:#30260f; --bad-soft:#341717; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:20px}
+header h1{font-family:var(--f-display);font-weight:700;font-size:2.4rem;letter-spacing:.01em;margin:0;line-height:1;text-wrap:balance}
+header h1 span{color:var(--accent)}
+header p.car{display:inline-block;margin:10px 0 0;background:var(--accent-soft);border-radius:6px;padding:4px 10px;font-size:.9rem;color:var(--ink)}
+header p{margin:6px 0 0;color:var(--muted);max-width:62ch}
+.search{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;flex-direction:column;gap:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.sbox{display:flex;gap:8px;align-items:center;background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:4px 6px 4px 14px}
+.sbox:focus-within{border-color:var(--accent)}
+.sbox input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 1.1rem var(--f-body);padding:10px 0;outline:none}
+.sbox button{border:0;background:transparent;color:var(--muted);font:500 .9rem var(--f-body);padding:8px 10px;cursor:pointer;border-radius:6px}
+.sbox button:hover{color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.lbl{font:600 .72rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 .85rem var(--f-body);padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip:focus-visible,.sbox button:focus-visible,.card summary:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:.85rem;color:var(--muted)}
+.hint b{font-family:var(--f-mono);font-weight:500;color:var(--ink);background:var(--code-bg);padding:1px 6px;border-radius:4px;cursor:pointer}
+.alert{background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);border-radius:10px;padding:12px 14px;font-size:.9rem}
+.alert strong{color:var(--warn)}
+.alert ol{margin:6px 0 0;padding-left:20px}
+#count{font:600 .8rem var(--f-body);color:var(--muted);letter-spacing:.04em}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.card summary::-webkit-details-marker{display:none}
+.mod{font:600 1.15rem var(--f-mono);background:var(--ink);color:var(--panel);border-radius:6px;padding:4px 0;width:46px;text-align:center}
+.st{min-width:0}
+.st h3{margin:0;font:600 1.25rem var(--f-display);letter-spacing:.01em;line-height:1.2}
+.st small{display:block;color:var(--muted);font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.risk{font:600 .72rem var(--f-body);letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.r-low{background:var(--ok-soft);color:var(--ok)}.r-mid{background:var(--warn-soft);color:var(--warn)}.r-high{background:var(--bad-soft);color:var(--bad)}
+.body{border-top:1px solid var(--line);padding:14px 16px 16px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.body>*{min-width:0}
+.body h4{margin:0 0 6px;font:600 .72rem var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.path{margin:0;padding-left:20px;display:grid;gap:3px}
+code,.mono{font-family:var(--f-mono);font-size:.88em;background:var(--code-bg);padding:1px 6px;border-radius:4px;overflow-wrap:anywhere}
+.tblw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .72rem var(--f-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td:first-child{font-family:var(--f-mono);font-size:.85rem;overflow-wrap:anywhere;min-width:9ch}
+@media (min-width:821px){td:first-child{white-space:nowrap}}
+.warn{background:var(--bad-soft);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.warn b{color:var(--bad)}
+.leon{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.leon b{color:var(--warn)}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.conf-ok{color:var(--ok);border-color:var(--ok)}.conf-mixed{color:var(--warn);border-color:var(--warn)}
+a.tag{color:var(--accent);text-decoration:none}a.tag:hover{text-decoration:underline}
+.tag{font-size:.75rem;border:1px solid var(--line);border-radius:4px;padding:1px 7px;color:var(--muted)}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px}
+.figs figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}
+.figs img{display:block;width:100%;height:auto;background:#fff}
+.figs figcaption{padding:8px 12px;font-size:.85rem;color:var(--muted)}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:22px;text-align:center;color:var(--muted)}
+section.ref{display:grid;gap:10px}
+section.ref h2{font:700 1.6rem var(--f-display);margin:12px 0 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.ab{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;gap:10px;align-items:baseline}
+.ab b{font:500 .95rem var(--f-mono);min-width:56px;color:var(--accent)}
+.ab span{font-size:.88rem}
+.ab i{color:var(--muted);font-style:normal;font-size:.8rem}
+form.add{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px}
+form.add .f{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+form.add label{display:grid;gap:4px;font-size:.8rem;color:var(--muted)}
+form.add input,form.add textarea,form.add select{font:inherit;color:var(--ink);background:var(--code-bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+.btn{justify-self:start;border:0;background:var(--accent);color:var(--accent-ink);font:600 .9rem var(--f-body);padding:9px 16px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--bad);border:1px solid var(--line);padding:5px 10px;font-size:.8rem}
+footer{color:var(--muted);font-size:.82rem;border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:820px),(pointer:coarse){
+  .search{position:static;padding-block:0}
+  .search .row{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  .search .row::-webkit-scrollbar{display:none}
+  .search .chip,.search .lbl{flex:none}
+}
+.totop{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font:600 .9rem var(--f-body);padding:11px 16px;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer}
+.totop:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+@media (max-width:520px){header h1{font-size:2rem}.card summary{grid-template-columns:auto 1fr}.risk{grid-column:2;justify-self:start}}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
+</style>
+<style>body{margin:0;font-size:15px}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>VCDS <span>Kodlama</span> Rehberi</h1>
+    <p class="car"><b>Araç:</b> 2013 SEAT Leon 5F 1.4 TSI ACT FR 140 hp · MQB · halojen ön far · ampullü gündüz farı · ön sis var · LED stop (sinyal ampullü) · sunroof yok · FR ambiyans</p>
+    <p>Ne yapmak istediğini yaz: hangi modül, hangi kanal, hangi değer, değiştirince ne olur. MQB (Golf 7/8, Passat B8, Octavia 3/4, Leon 3, Tiguan 2, Polo 6) ve PQ (Golf 5/6, Passat B6/B7, Jetta, Octavia 2) için.</p>
+  </header>
+
+  <div class="search">
+    <div class="sbox">
+      <input id="q" type="search" placeholder="ör. farlar, sinyal, ayna, sis, coming home, TFL…" autocomplete="off" aria-label="Ara">
+      <button id="clr" type="button">Temizle</button>
+    </div>
+    <div class="row" id="cats"><span class="lbl">Kategori</span></div>
+    <div class="row" id="plats"><span class="lbl">Platform</span></div>
+  </div>
+
+  <button class="totop" id="totop" type="button" hidden>↑ Ara</button>
+  <div class="hint">Hızlı dene: <b data-q="far">far</b> <b data-q="arka">arka</b> <b data-q="sinyal">sinyal</b> <b data-q="kanal">kanal</b> <b data-q="led">led</b> <b data-q="ayna">ayna</b> <b data-q="kilit">kilit</b> <b data-q="gösterge">gösterge</b></div>
+
+  <div class="alert"><strong>Her değişiklikten önce:</strong>
+    <ol>
+      <li>Tam <b>Auto-Scan</b> al ve kaydet. Değiştireceğin modülün orijinal kodlamasını / kanal değerini not al veya ekran görüntüsünü çek.</li>
+      <li>Aküyü şarj cihazına bağla ya da en azından akü 12.4V üstünde olsun. Kontak açık, motor kapalı.</li>
+      <li>Tek seferde tek değişiklik yap, dene, sonra devam et. Bittiğinde hata hafızasını temizle.</li>
+    </ol>
+  </div>
+
+  <div id="count" aria-live="polite"></div>
+  <div class="list" id="list"></div>
+
+  <section class="ref" id="gorseller">
+    <h2>Leon 5F lamba kanalları görselde</h2>
+    <p class="hint" style="margin:0">Hangi lambanın hangi Leuchte kanalı olduğunu araç üzerinde gör. Senin farın Full LED ise LED, ampullü ise Halojen sekmesine bak. Görsele dokununca büyük açılır.</p>
+    <div class="row" id="imgtabs" role="tablist">
+      <button class="chip" type="button" data-set="mine" aria-pressed="true">Benim aracım (halojen far + LED stop)</button>
+      <button class="chip" type="button" data-set="led" aria-pressed="false">Full LED far / LED stop</button>
+      <button class="chip" type="button" data-set="hal" aria-pressed="false">Halojen far / normal stop</button>
+    </div>
+    <div class="figs" data-set="mine">
+      <figure><a href="img/on-halojen.png" target="_blank" rel="noopener"><img src="img/on-halojen.png" alt="Leon 5F halojen ön lamba kanalları" loading="lazy" width="1455" height="769"></a><figcaption>Ön (halojen) – senin farların</figcaption></figure>
+      <figure><a href="img/arka-led.png" target="_blank" rel="noopener"><img src="img/arka-led.png" alt="Leon 5F LED arka lamba kanalları" loading="lazy" width="640" height="356"></a><figcaption>Arka (LED) – senin stopların. 28 = arka sis, 12/13 etiketi hatalı</figcaption></figure>
+    </div>
+    <div class="figs" data-set="led" hidden>
+      <figure><a href="img/on-led.png" target="_blank" rel="noopener"><img src="img/on-led.png" alt="Leon 5F Full LED ön lamba kanalları: sinyal, gündüz farı, kısa/uzun far ve sis kanalları" loading="lazy" width="640" height="356"></a><figcaption>Ön (LED)</figcaption></figure>
+      <figure><a href="img/arka-led.png" target="_blank" rel="noopener"><img src="img/arka-led.png" alt="Leon 5F LED arka lamba kanalları: sinyal, fren, park, plaka, geri vites" loading="lazy" width="640" height="356"></a><figcaption>Arka (LED)</figcaption></figure>
+    </div>
+    <div class="figs" data-set="hal" hidden>
+      <figure><a href="img/on-halojen.png" target="_blank" rel="noopener"><img src="img/on-halojen.png" alt="Leon 5F halojen ön lamba kanalları" loading="lazy" width="1455" height="769"></a><figcaption>Ön (halojen)</figcaption></figure>
+      <figure><a href="img/arka-halojen.jpg" target="_blank" rel="noopener"><img src="img/arka-halojen.jpg" alt="Leon 5F LED olmayan arka lamba kanalları" loading="lazy" width="581" height="370"></a><figcaption>Arka (LED olmayan)</figcaption></figure>
+    </div>
+    <div class="warn"><b>Görseldeki bir hata:</b> LED arka görselinde Leuchte28RFL LC11 "sol geri vites" ve 12NL/13NL "arka sis" yazıyor. Kanal listesine ve halojen görsele göre 28 arka sis, 12/13 ise ön sis farlarıdır. Kanal kartındaki tabloyu esas al.</div>
+    <p class="hint" style="margin:0">Görseller: <a class="tag" href="https://www.vag-coding.net/seat-cupra/leon-5f/" target="_blank" rel="noopener">vag-coding.net – Leon (5F) Leuchte kanal listesi</a></p>
+  </section>
+
+  <section class="ref" id="abbr">
+    <h2>Lamba kanalı kısaltmaları (MQB 09)</h2>
+    <p class="hint" style="margin:0">MQB'de 09 → Adaptasyon içinde lambalar <code>Leuchte</code> kanalları olarak durur. Örnek: <code>Leuchte3BLK VL A20</code> → 3 numaralı kanal, ön sol sinyal, A20 pini. Kanal adındaki kısaltmayı aşağıdan çöz. Her kanalın alt ayarları: <code>Lasttyp</code> (lamba tipi/watt), <code>Lichtfunktion A…H</code> (kanalın hangi görevde yanacağı), <code>Dimmwert AB…GH</code> (parlaklık 0–127).</p>
+    <div class="grid2" id="abgrid"></div>
+  </section>
+
+  <section class="ref">
+    <h2>Yaygın güvenlik erişim kodları</h2>
+    <div class="tblw"><table>
+      <thead><tr><th>Kod</th><th>Modül</th><th>Not</th></tr></thead>
+      <tbody>
+        <tr><td>31347</td><td>09 Merkezi Elektronik</td><td>MQB ve birçok PQ BCM için kodlama/adaptasyon öncesi. Sadece gerekirse sorulur.</td></tr>
+        <tr><td>20103</td><td>17 Gösterge paneli</td><td>MQB gösterge kodlamasında sık kullanılır.</td></tr>
+        <tr><td>19249</td><td>44 Direksiyon desteği</td><td>Temel ayar ve kodlama için. Yanlış ayar direksiyon arızası yapar.</td></tr>
+        <tr><td>40168</td><td>03 ABS / Fren</td><td>Kodlama için. Fren modülünü bilmeden kurcalama.</td></tr>
+      </tbody>
+    </table></div>
+    <p class="hint" style="margin:0">Kodlar araca ve yazılıma göre değişebilir. VCDS reddederse zorlamayın; tekrarlanan hatalı girişler modülü bir süre kilitler.</p>
+  </section>
+
+  <section class="ref">
+    <h2>Kendi notunu ekle</h2>
+    <p class="hint" style="margin:0">Kendi aracında denediğin kanalı buraya kaydet, aramada çıksın. Bu tarayıcıda saklanır, başka cihazda görünmez.</p>
+    <form class="add" id="addf">
+      <div class="f">
+        <label>Başlık<input id="a-title" required placeholder="ör. Arka sis iki taraf"></label>
+        <label>Modül no<input id="a-mod" required placeholder="09" maxlength="3"></label>
+        <label>Kanal / Byte-Bit<input id="a-ch" placeholder="Leuchte18NSL HL / Lichtfunktion A"></label>
+        <label>Platform<select id="a-plat"><option>MQB</option><option>PQ</option><option>Genel</option></select></label>
+      </div>
+      <label>Ne yaptım, ne oldu<textarea id="a-note" rows="2" placeholder="Değer 0 → 127 yaptım, arka sağ sis de yandı."></textarea></label>
+      <button class="btn" type="submit">Kaydet</button>
+    </form>
+  </section>
+
+  <footer>Kanal adları VCDS'nin dil ayarına ve modül yazılımına göre Almanca ya da İngilizce görünür; her kayıtta VCDS adaptasyon ekranındaki arama kutusuna yazacağın anahtar kelime verildi. Değerler yaygın araçlarda bilinenlerdir; senin aracında farklıysa orijinal değere geri dön. Gösterge ve güvenlik sistemi değişiklikleri muayene ve garanti açısından sorun çıkarabilir.</footer>
+</div>
+
+<script>
+const DATA=[
+/* ---------- AYDINLATMA ---------- */
+{id:"drl",cat:"Aydınlatma",title:"Gündüz farı (TFL / DRL) aç-kapa",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["far","farlar","gündüz","drl","tfl","ön far","led şerit"],
+ key:["Tagfahrlicht","Daytime running"],
+ path:["09 - Cent. Elect. seç","Gerekirse Güvenlik Erişimi (16): 31347","Adaptasyon (10) → arama kutusuna anahtar kelimeyi yaz","İlgili kanalı seç → yeni değeri seç → Do It!"],
+ ch:[["Tagfahrlicht Aktivierung / Daytime running lights - Activation","Gündüz farının genel açık/kapalı durumu"],["Tagfahrlicht ... Menüsteuerung / menu control","Multimedya ekranından kullanıcının kendisi aç-kapa yapabilsin"]],
+ vals:[["aktiv","Kontak açılınca gündüz farı yanar"],["nicht aktiv","Gündüz farı tamamen kapanır"],["Menüsteuerung aktiv","Ayar ekranda 'Işık' menüsüne gelir"]],
+ effect:"Kapalıyken ön şeritler park lambası gibi sönük yanabilir veya hiç yanmaz (fara göre).",
+ warn:"Birçok ülkede gündüz farı zorunlu. Kapatırsan muayenede sorun olabilir.",risk:"low"},
+{id:"drl-dim",cat:"Aydınlatma",title:"Gündüz farı parlaklığı ve sinyalde kısma",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (lamba kanalı)",
+ tags:["far","farlar","gündüz","drl","tfl","parlaklık","kısma","sinyal","dim","kanal"],
+ key:["TFL","Leuchte"],
+ path:["09 → Adaptasyon (10)","Arama: TFL → Leuchte..TFL VL ve ..TFL VR kanallarını bul","Alt kanal: Dimmwert AB (normal) veya CD (sinyal yanarken)","Değeri gir → Do It! (iki taraf için ayrı ayrı)"],
+ ch:[["LeuchteXX TFL VL / TFL VR","Ön sol / ön sağ gündüz farı kanalı"],["Dimmwert AB","Normal parlaklık (0–127)"],["Dimmwert CD","Sinyal yanarken o taraftaki TFL parlaklığı"]],
+ vals:[["127","Tam parlaklık"],["64 civarı","Yarı parlaklık, park lambası etkisi"],["0","O fonksiyonda tamamen söner (sinyalde sönme etkisi)"]],
+ effect:"Sinyal yanınca o taraftaki TFL'yi söndürmek sinyali daha görünür yapar.",
+ warn:"127 üstünü girme. Sol ve sağ kanalda aynı değeri kullan, yoksa farlar farklı parlaklıkta görünür.",risk:"mid"},
+{id:"ch",cat:"Aydınlatma",title:"Coming Home / Leaving Home",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama (PQ)",
+ tags:["far","farlar","coming home","leaving home","eve dönüş","karşılama","kapı açınca far"],
+ key:["Coming Home","Leaving Home"],
+ path:["MQB: 09 → Adaptasyon (10) → arama: Coming Home","PQ: 09 → Kodlama (07) → Uzun Kodlama Yardımcısı → 'Coming Home' / 'Leaving Home' bitlerini işaretle","Do It!"],
+ ch:[["Coming Home Funktion","Araç kilitlenince farlar bir süre yanık kalır"],["Leaving Home Funktion","Kilit açılınca farlar yanar"],["Coming Home manuell / via Fernlicht","Işık sensörü yoksa: kontak kapandıktan sonra selektörle tetikleme"],["... Menüsteuerung","Süre ve aç/kapa ekrandan ayarlanabilir"]],
+ vals:[["aktiv","Fonksiyon çalışır"],["nicht aktiv","Fonksiyon kapanır"],["Süre (sn)","Genelde 0–90 sn arası, 10'ar adım"]],
+ effect:"Otomatik çalışma için far anahtarı AUTO konumunda olmalı ve araçta yağmur/ışık sensörü bulunmalı.",
+ warn:"Sensör yoksa sadece manuel (selektör) versiyonunu aç.",risk:"low"},
+{id:"comfort-turn",cat:"Aydınlatma",title:"Konfor sinyal yanıp sönme sayısı",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["sinyal","konfor sinyal","dörtlü","flaşör","blinker","3 kez","5 kez","yanıp sönme"],
+ key:["Komfortblinken","Comfort turn signal"],
+ path:["09 → Adaptasyon (10)","Arama: Komfortblinken (veya Comfort)","Blinkzyklen kanalını seç → sayıyı gir → Do It!"],
+ ch:[["Komfortblinken Blinkzyklen","Kola hafif dokununca kaç kez yanacağı"],["Komfortblinken Menüsteuerung","Ekrandan değiştirilebilsin (MQB)"]],
+ vals:[["1","Konfor sinyal fiilen kapalı"],["3","Fabrika değeri"],["4–5","Daha uzun şerit değiştirme sinyali"]],
+ effect:"Kola tam basmadan dokununca sinyal ayarladığın sayı kadar yanar.",
+ warn:"Bazı PQ modüllerinde bu ayar uzun kodlamada tek bit olarak bulunur (aktif/pasif).",risk:"low"},
+{id:"fog-corner",cat:"Aydınlatma",title:"Sis farını viraj (dönüş) lambası yapmak",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (lamba kanalı)",
+ tags:["far","farlar","sis","ön sis","viraj","dönüş lambası","abbiegelicht","cornering","nsw","kanal"],
+ key:["NSW","NL","Abbiegelicht"],
+ path:["09 → Adaptasyon (10) → arama: NSW (veya NL)","Ön sol sis kanalı (… NSW VL / NL LB…) → boş bir Lichtfunktion (örn. C) → 'Abbiegelicht links'","Aynı kanalda Dimmwert CD = 127","Ön sağ için 'Abbiegelicht rechts' ile tekrarla"],
+ ch:[["LeuchteXX NSW VL / NL LB…","Ön sol sis farı"],["LeuchteXX NSW VR / NL RB…","Ön sağ sis farı"],["Lichtfunktion C / D","Boş fonksiyon yuvası; buraya viraj görevi atanır"],["Dimmwert CD","Viraj modunda parlaklık"]],
+ vals:[["Abbiegelicht links / rechts","Direksiyon kırınca veya sinyalde o taraftaki sis yanar"],["Dimmwert 127","Tam parlaklık"],["Dimmwert 0","Fonksiyon atanmış ama yanmaz"]],
+ effect:"Düşük hızda dönüşte ilgili taraftaki sis farı yanar.",
+ warn:"Dolu bir Lichtfunktion yuvasını (A/B, sis görevinin olduğu) değiştirme; sis farı normal çalışmaz olur. Değiştirmeden önce mevcut değerleri yaz.",risk:"mid"},
+{id:"rear-fog",cat:"Aydınlatma",title:"Arka sis lambasını iki tarafta yakmak",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (lamba kanalı)",
+ tags:["arka","arka far","stop","sis","arka sis","nsl","kanal","iki taraf"],
+ key:["NSL","Nebelschluss"],
+ path:["09 → Adaptasyon (10) → arama: NSL","Hangi tarafın aktif olduğuna bak (genelde sürücü tarafı)","Diğer taraftaki kanal varsa: Lasttyp'i aktif taraf ile aynı yap, Lichtfunktion'a 'Nebelschlusslicht' ata"],
+ ch:[["LeuchteXX NSL HL","Arka sol sis"],["LeuchteXX NSL HR","Arka sağ sis"],["Lasttyp","Kanalda lamba var mı, tipi ne"]],
+ vals:[["Lasttyp = aktif taraf ile aynı","Kanal enerji verir"],["Lasttyp = nicht belegt / 0","Kanal kapalı"]],
+ effect:"Stop lambası içinde ampul/LED yuvası varsa ikinci taraf da yanar.",
+ warn:"O tarafta ampul/LED fiziksel olarak yoksa kanalı açma: lamba arızası uyarısı gelir. Bazı ülkelerde tek taraf zorunludur.",risk:"mid"},
+{id:"lasttyp",cat:"Aydınlatma",title:"LED dönüşümü sonrası lamba hatası (Lasttyp)",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama veya kanal (PQ)",
+ tags:["led","ampul","lamba hatası","canbus","titreme","plaka","kanal","lasttyp","arka","far","sinyal","hızlı sinyal"],
+ key:["Lasttyp","Load type","Kaltdiagnose"],
+ path:["09 → Adaptasyon (10) → arama: değiştirdiğin lambanın kısaltması (örn. KZL, BR, BLK)","Kanalın Lasttyp alt kanalını aç, mevcut değeri not al","LED'e uygun tipi seç; varsa soğuk/sıcak kontrolü (Kaltdiagnose / Warmdiagnose) kapat","Do It! → lambayı test et"],
+ ch:[["Lasttyp","Modülün beklediği yük (örn. 21W ampul, LED)"],["Kaltdiagnose / Warmdiagnose","Lamba kapalıyken / açıkken arıza kontrolü"],["Fehlerort / Lampendefekt","Arıza durumunda hangi uyarının çıkacağı"]],
+ vals:[["Ampul tipi (21W, 5W…)","LED takılıysa düşük akım = 'lamba yanmıyor' uyarısı, hızlı sinyal"],["LED tipi","LED ile uyarısız çalışır"],["Kaltdiagnose kapalı","LED'in kapalıyken sönük yanması / titremesi azalır"],["nicht belegt","Kanal tamamen kapanır, lamba hiç yanmaz"]],
+ effect:"Uyumsuz LED'lerde lamba uyarısı, hızlı yanıp sönen sinyal ve titreme bu ayarla giderilir.",
+ warn:"Ampul takılı kanala LED yükü tanımlarsan modül ampulü korumayabilir. Arka sinyalde kanalı yanlış tipe almak sinyalin çalışmamasına yol açabilir.",risk:"mid"},
+{id:"ebf",cat:"Aydınlatma",title:"Acil fren flaşörü",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["arka","fren","stop","acil fren","dörtlü","flaşör","emergency brake"],
+ key:["Notbremsblinken","Emergency brake"],
+ path:["09 → Adaptasyon (10) → arama: Notbremsblinken","Değeri seç → Do It!"],
+ ch:[["Notbremsblinken / Emergency brake flashing","Sert frende dörtlülerin otomatik yanması"]],
+ vals:[["aktiv","Sert frende dörtlüler hızlı yanıp söner"],["nicht aktiv","Kapalı"]],
+ effect:"Arkadaki sürücü sert frenlemeyi daha erken fark eder.",
+ warn:"ABS (03) tarafında da destek gerekir; destek yoksa çalışmaz ama zarar vermez.",risk:"low"},
+{id:"lights-lock",cat:"Aydınlatma",title:"Kilitlemede sinyal ile onay",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama (PQ)",
+ tags:["sinyal","kilit","kilitleme","onay","flaşör"],
+ key:["Optische Rückmeldung","Optical feedback"],
+ path:["09 → Adaptasyon (10) → arama: Rückmeldung (veya feedback)","Verriegeln / Entriegeln kanallarını ayrı ayrı ayarla → Do It!"],
+ ch:[["Optische Rückmeldung Verriegeln","Kilitlerken sinyal yanması"],["Optische Rückmeldung Entriegeln","Açarken sinyal yanması"]],
+ vals:[["aktiv","Sinyaller yanıp söner"],["nicht aktiv","Görsel onay yok"]],
+ effect:"Aracın kilitlendiğini uzaktan görürsün.",warn:"",risk:"low"},
+{id:"leon-map",cat:"Aydınlatma",title:"Leon 5F lamba kanal haritası (09)",plat:["MQB"],leonOnly:true,mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["kanal","kanallar","leuchte","harita","liste","tüm kanallar","far","farlar","arka","plaka","ambiyans","ayak","fußraum","tavan","kapı","iç aydınlatma"],
+ key:["Leuchte"],
+ path:["09 → Güvenlik Erişimi (16): 31347","Adaptasyon (10) → arama kutusuna Leuchte yaz: tüm lamba kanalları listelenir","Aşağıdaki numarayla kendi listendeki adı eşleştir; boşluklar ve harfler VCDS sürümüne göre biraz farklı yazılabilir","DİKKAT: Leon'da bazı adlar yanıltıcı. Arka sis kanal 28 (adı RFL), 26/27 (adı NSL) ise park lambası; 16/17 (adında BLK/TFL geçer) ambiyans","Sağ taraf kanallarında arama yaparken ad içinde boşluk olabilir (örn. 'Leuchte 5TFL')"],
+ ch:[["Leuchte 0 BLK VL B36","Ön sol sinyal (farda). FR ve Cupra'da LED"],
+     ["Leuchte1BLK VR B20","Ön sağ sinyal (farda). FR ve Cupra'da LED"],
+     ["Leuchte2SL VL B10","Ön sol gündüz farı (farda). Kısa far açıkken kısık TFL parlaklığı burada (varsayılan 35)"],
+     ["Leuchte3SL VR B21","Ön sağ gündüz farı (farda). Kısa far açıkken kısık TFL parlaklığı burada"],
+     ["Leuchte4TFL LB4","Ön sol gündüz farı besleme"],
+     ["Leuchte5 TFL RB32","Ön sağ gündüz farı besleme (adında boşluk var, aramada 'Leuchte5 TFL')"],
+     ["Leuchte6ABL LC5","Ön sol kısa far (halojen / LED)"],
+     ["Leuchte7ABL RB1","Ön sağ kısa far (halojen / LED)"],
+     ["Leuchte8FL LB39","Ön sol uzun far"],
+     ["Leuchte9FL RB2","Ön sağ uzun far"],
+     ["Leuchte10SHUTTER LB23","Ön sol uzun far perdesi (sadece Full LED far; senin araçta kullanılmıyor)"],
+     ["Leuchte11SHUTTER RB22","Ön sağ uzun far perdesi (sadece Full LED far; senin araçta kullanılmıyor)"],
+     ["Leuchte12NL LB45","Ön sol sis / viraj lambası"],
+     ["Leuchte13NL RB5","Ön sağ sis / viraj lambası"],
+     ["Leuchten14AL LB6","Kullanılmıyor. Adı 'Leuchten' diye yazılı, listenin sonuna yakın çıkar"],
+     ["Leuchte15AL RB44","Kullanılmıyor"],
+     ["Leuchte16BLK SL B35 / BLK SL KC9","Kırmızı ambiyans (kapılar). Adındaki BLK SL yanıltıcı, sinyal değil"],
+     ["Leuchte17TFL R BLK SR B3 / TFL R BLK SR KC3","Beyaz ambiyans (kapılar). Adındaki TFL/BLK yanıltıcı"],
+     ["Leuchte18BLK HL A60","Arka sol sinyal (stop lambası)"],
+     ["Leuchte19BLK HR C31","Arka sağ sinyal (stop lambası)"],
+     ["Leuchte20BR L A71","Arka sol fren lambası"],
+     ["Leuchte21BR R C8","Arka sağ fren lambası"],
+     ["Leuchte22BR M A57","Üçüncü fren lambası (orta)"],
+     ["Leuchte23SL HL C10","Arka sol dış park lambası (LED şerit)"],
+     ["Leuchte24SL HR A65","Arka sağ dış park lambası (LED şerit)"],
+     ["Leuchte25KZL H A59","Plaka lambası"],
+     ["Leuchte26NSL L A72","Arka sol iç park lambası (LED şerit). Adı NSL ama arka sis DEĞİL"],
+     ["Leuchte27NSL R C6","Arka sağ iç park lambası (LED şerit). Adı NSL ama arka sis DEĞİL"],
+     ["Leuchte28RFL L C11","Arka sis lambası. Adı RFL ama geri vites DEĞİL"],
+     ["Leuchte29RFL R A64","Geri vites lambası"],
+     ["Leuchte30FR L C72","Ayak (Fußraum) aydınlatması"],
+     ["Leuchte31AMBL 1 C61","Kullanılmıyor (ambiyans yedek)"],
+     ["Leuchte32AMBL 2 C35","Kullanılmıyor (ambiyans yedek)"],
+     ["Leuchte33AMBL 3 C36","Kullanılmıyor (ambiyans yedek)"],
+     ["Leuchte34AMBL 4 C37","Kullanılmıyor (ambiyans yedek)"]],
+ vals:[["Görseller","Sayfanın altındaki \u2018Leon 5F lamba kanalları görselde\u2019 bölümünde ön/arka, LED/halojen"],["Lasttyp","Kanala bağlı lamba tipi; nicht belegt = kanal kapalı"],["Fehlerort DTC-DFCC (Mittelbyte)","Arıza olduğunda hangi hata kodunun yazılacağı"],["Lampendefekt-Bitposition","Lamba arıza takibi; LED dönüşümünde uyarı çıkıyorsa buraya bakılır"],["Lichtfunktion A–H","Kanalın hangi durumda yanacağı (Standlicht, Innenlicht, Abbiegelicht…)"],["Dimmwert AB–GH","0–127 parlaklık (sonraki yazılımlarda 127 üstü kabul edilebilir)"],["Dimmrichtung","maximize: birden fazla fonksiyon aynı anda aktifse yüksek olan geçerli"]],
+ effect:"Leon 5F'teki 35 lamba kanalının tamamı (0–34). Tavan ve okuma lambaları bu listede yok; onlar tavan modülünden çalışır.",
+ warn:"Liste motor-talk TBAx blogundan (2015, ilk kasa Leon 5F). Kanal numaraları sabit; ama kendi aracındaki adı mutlaka karşılaştır. Kanalı değiştirmeden önce adını ve tüm alt değerlerini not al.",risk:"mid",
+ src:[["motor-talk: Leon 5F Leuchtenzuordnung","https://www.motor-talk.de/blogs/tbax-vag-codierungen/seat-leon-5f-leuchtenzuordnung-t5203515.html"],["motor-talk: MQB Leuchtenkonfiguration erklärt","https://www.motor-talk.de/blogs/tbax-vag-codierungen/mqb-leuchtenkonfiguration-erklaert-t5039426.html"],["chris-schwarz: Leon 5F VCDS Tipps (PDF)","https://chris-schwarz.de/wp-content/uploads/2016/12/chrizschwarz_vcds_tipps_tricks.pdf"],["seatcupra.net: VCDS How-To MK3 Leon","https://www.seatcupra.net/forums/threads/vcds-how-to-guides-mk3-leon-5f.393714/page-41"]]},
+{id:"plate",cat:"Aydınlatma",title:"Plaka lambası (KZL) parlaklık ve LED",plat:["MQB"],leonOnly:true,mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (lamba kanalı)",
+ tags:["plaka","plaka lambası","kzl","led","arka","kanal","hata"],
+ key:["Leuchte25KZL","KZL"],
+ path:["09 → 31347 → Adaptasyon (10) → arama: KZL","Leuchte25KZL HA59 kanalını aç, tüm alt değerleri not al","LED taktıysan: Dimmwert AB = 127; gerekirse Lasttyp'i LED tipine al","İstersen: Lichtfunktion C = Innenlicht, Dimmwert CD = 100 → kapı açılınca / kilit açılınca plaka da yanar"],
+ ch:[["Leuchte25KZL HA59 – Dimmwert AB","Normal yanma parlaklığı"],["Leuchte25KZL HA59 – Lichtfunktion C","Ek görev (örn. Innenlicht)"],["Leuchte25KZL HA59 – Dimmwert CD","Ek görevdeki parlaklık (varsayılan 0)"],["Leuchte25KZL HA59 – Lasttyp","Ampul / LED tipi"]],
+ vals:[["Dimmwert AB 127","LED plaka için önerilen değer"],["Dimmwert AB 100","Halojen (ampul) için yaygın değer"],["Lichtfunktion C = Innenlicht + CD 100","Kilit açılınca plaka lambası da yanar (karşılama efekti)"],["Lasttyp yanlış","'Plaka lambası arızalı' uyarısı veya titreme"]],
+ effect:"LED plaka lambasındaki uyarı ve titreme giderilir.",
+ warn:"Değeri 127 yapıp LED hâlâ titriyorsa sorun büyük ihtimalle LED'in kalitesinde; Lasttyp ile oynamadan önce orijinal değeri yaz.",risk:"mid",
+ src:[["motor-talk: Leon 5F Leuchtenzuordnung","https://www.motor-talk.de/blogs/tbax-vag-codierungen/seat-leon-5f-leuchtenzuordnung-t5203515.html"],["seat-leon.de forum: VCDS","https://www.seat-leon.de/forum/threads/vcds.102612/page-180"]]},
+{id:"footwell",cat:"Aydınlatma",title:"Ayak (Fußraum) aydınlatması",plat:["MQB"],leonOnly:true,mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon + Uzun kodlama",
+ tags:["ayak","ayak aydınlatma","fußraum","footwell","ambiyans","iç aydınlatma","kanal","led"],
+ key:["Leuchte30FR","Fußraum","FR LC72"],
+ path:["Fabrikadan varsa: 09 → 31347 → Adaptasyon → arama: FR (Leuchte30FR LC72) → Dimmwert ile parlaklığı ayarla","Sonradan taktıysan: Leuchte30FR LC72 → Lasttyp = 36 (LED Kleinleistung)","Ambiyans profilinde ayak için varsayılan parlaklığı ayarla","Uzun kodlamada ayak aydınlatması 'takılı' biti gerekebilir (Golf 7'de Byte 5 Bit 7 ve Byte 17 Bit 3; Leon'da yardımcıdaki açıklamayı kontrol et)"],
+ ch:[["Leuchte30FR LC72","Ayak aydınlatması çıkışı"],["Lasttyp","Sonradan takılan LED için 36 – LED Kleinleistung"],["Dimmwert","Parlaklık 0–127"]],
+ vals:[["Lasttyp 36","Düşük güç LED, uyarı vermez"],["Lasttyp nicht belegt","Kanal kapalı; LED takılı olsa da yanmaz"],["Dimmwert 127","Tam parlaklık"]],
+ effect:"Kapı açılınca ve gece sürüşte ayak boşluğu aydınlanır.",
+ warn:"Sonradan takmada kablo LC72 pinine gelmeli. Byte numaraları Golf 7'den alındı, Leon'da aynı olduğu doğrulanmadı.",risk:"mid",
+ src:[["seat-leon.de: Fußraumbeleuchtung beim 5F nachrüsten","https://www.seat-leon.de/forum/threads/fusssraumbeleuchtung-beim-5f-nachruesten.118799/"],["chris-schwarz: Leon 5F VCDS Tipps (PDF)","https://chris-schwarz.de/wp-content/uploads/2016/12/chrizschwarz_vcds_tipps_tricks.pdf"]]},
+{id:"ambient",cat:"Aydınlatma",title:"Kapı ve ön panel ambiyans aydınlatması",plat:["MQB"],leonOnly:true,mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["ambiyans","ambient","kapı","kapı aydınlatma","şerit","led","renk","kırmızı","beyaz","iç aydınlatma","kanal"],
+ key:["Leuchte16","Leuchte17","Ambiente"],
+ path:["09 → 31347 → Adaptasyon (10) → arama: Ambiente (veya Leuchte16 / Leuchte17)","Kapı şerit LED'leri için Dimmwert = 127 (tam parlaklık)","Renk: 2013–2016 Leon'da kırmızı (Leuchte16) ve beyaz (Leuchte17) ayrı kanallardır; birinin Dimmwert'ini 0 yapıp diğerini açarak renk seçilir. Arama: Leuchte16 / Leuchte17","FL (2017+) araçlarda MIB ekranında renk menüsü kanalları var; 2013 aracında yoktur"],
+ ch:[["Leuchte16BLK SL …","Kırmızı ambiyans (kapılar); adı sinyal gibi ama değil"],["Leuchte17TFL R BLK SR …","Beyaz ambiyans (kapılar); adı yanıltıcı"],["Dimmwert","Parlaklık 0–127"],["(sadece FL) Interior light: light configuration – Ambientemenue mit globalem aus","Ekranda ambiyans menüsü"],["(sadece FL) Ambient_Farbliste_HMI","10 / 30 renk listesi"]],
+ vals:[["Dimmwert 127","Kapı şeritleri tam parlak"],["Kırmızı kanal 0, beyaz kanal 127","Sadece beyaz ambiyans"],["Kırmızı 127, beyaz 0","Sadece kırmızı (FR'nin tipik rengi)"]],
+ effect:"Gece kapı şeritleri ve orta konsol daha belirgin olur, renk değişir.",
+ warn:"Ambiyans donanımı (kapı şeridi LED'i) yoksa kanal açmak işe yaramaz, hata kaydı oluşabilir. Çok renkli menü 2013 aracında kodla gelmez; donanım farklıdır.",risk:"low",
+ src:[["vag-coding.net: Leon 5F ambient light configuration","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-ambient-light-configuration/"],["vag-coding.net: Leon 5F FL ambient colors","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-facelift-ambient-light-activation-colors/"],["motor-talk: Leon 5F FR Ambientebeleuchtung","https://www.motor-talk.de/forum/leon-5f-fr-ambientebeleuchtung-t6542208.html?page=2"]]},
+{id:"interior",cat:"Aydınlatma",title:"Tavan / iç lamba yanma ve sönme süresi",plat:["MQB"],leonOnly:true,mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["tavan","tavan lambası","iç aydınlatma","okuma lambası","innenlicht","kapı","süre","karşılama"],
+ key:["Innenlicht","Interior light"],
+ path:["09 → 31347 → Adaptasyon (10) → arama: Innenlicht","Süre, kararma (yumuşak sönme) ve kilit açılınca yanma kanallarını gör","Değeri değiştir → Do It!"],
+ ch:[["Innenlicht – Nachlaufzeit / afterglow","Kapı kapandıktan sonra ne kadar yanık kalacağı"],["Innenlicht – Dimmzeit / Dimmrampe","Yumuşak açılıp sönme hızı"],["Innenlicht bei Entriegeln","Kilit açılınca tavan lambası yanar"]],
+ vals:[["Süre artırılır","Lamba kapı kapandıktan sonra daha uzun yanar"],["Dimmzeit 0","Yumuşak sönme kalkar, anında söner"]],
+ effect:"Tavan lambasının davranışı değişir. Plaka ve ayak lambasına Lichtfunktion 'Innenlicht' atarsan onlar da bu kanalları izler.",
+ warn:"Tavan ve okuma lambalarının kendisi Leuchte listesinde ayrı kanal olarak bulunmayabilir; tavan modülü kendi devresiyle çalışır. Kanal adları yazılıma göre değişir, araması 'Innenlicht' ile yap.",risk:"low",
+ src:[["motor-talk: MQB Leuchtenkonfiguration erklärt","https://www.motor-talk.de/blogs/tbax-vag-codierungen/mqb-leuchtenkonfiguration-erklaert-t5039426.html"]]},
+{id:"doorwarn",cat:"Aydınlatma",title:"Kapı uyarı / giriş lambaları",plat:["MQB"],leonOnly:true,mod:"42/52",modName:"Kapı modülleri (sürücü / yolcu)",how:"Adaptasyon / Kodlama",
+ tags:["kapı","kapı lambası","uyarı lambası","giriş lambası","einstieg","türwarnleuchte","ayna altı","kanal"],
+ key:["Türwarnleuchte","Einstieg","Umfeldleuchte"],
+ path:["Önce donanımı kontrol et: kapı açıkken kapı altında kırmızı/beyaz lamba var mı","42 (sürücü kapı) ve 52 (yolcu kapı) → Adaptasyon → arama: Leuchte veya Einstieg","09'daki Leon lamba listesinde (0–34) kapı altı lambası kanalı yok; varsa kapı modülündedir"],
+ ch:[["Türwarnleuchte","Kapı açıkken kırmızı uyarı"],["Einstiegsleuchte / Umfeldleuchte","Giriş zemini aydınlatması"]],
+ vals:[],
+ effect:"Fabrika çıkışlı Leon 3'lerin çoğunda kapı altı lambası yoktur.",
+ warn:"Bu konuda Leon 5F'e özel doğrulanmış kanal listesi bulamadım. Donanım yoksa kodlamayla eklenemez, önce lamba ve kablo takılmalı.",risk:"mid",src:[]},
+/* ---------- KONFOR ---------- */
+{id:"windows",cat:"Konfor",title:"Kumandayla camları açma / kapama",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama (PQ)",
+ tags:["cam","pencere","kumanda","anahtar","konfor kapama","sunroof"],
+ key:["Komfortbedienung","Comfort","Fensterheber"],
+ path:["09 → Adaptasyon (10) → arama: Komfort","'Öffnen' (açma) ve 'Schließen' (kapama) kanallarını kumanda (Funk) için aktif yap","PQ: 09 → Uzun Kodlama Yardımcısı → 'Comfort opening/closing via remote'"],
+ ch:[["Komfortbedienung Fensterheber Funk Öffnen","Kilit açma tuşuna basılı tutunca camlar iner"],["Komfortbedienung Fensterheber Funk Schließen","Kilit tuşuna basılı tutunca camlar kapanır"]],
+ vals:[["aktiv","Çalışır"],["nicht aktiv","Kapalı"]],
+ effect:"Sıcak havada aracı yaklaşmadan havalandırırsın.",
+ warn:"Kapama sırasında sıkışma koruması çalışır ama yine de içeride kimse yokken kullan.",risk:"low"},
+{id:"mirrors",cat:"Konfor",title:"Kilitlemede aynaların katlanması",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik (bazı araçlarda 42/52 kapı modülü)",how:"Adaptasyon",
+ tags:["ayna","dikiz","katlanma","kilit","kilitleme"],
+ key:["Spiegelanklappen","Mirror fold"],
+ path:["09 → Adaptasyon (10) → arama: Spiegel (veya mirror)","Katlanma ile ilgili kanalı aktif yap","Yoksa 42 (sürücü kapı) ve 52 (yolcu kapı) modüllerinde ara"],
+ ch:[["Spiegelanklappen beim Verriegeln","Kilitleyince aynalar katlanır"],["... Menüsteuerung","Ekrandan aç/kapa"]],
+ vals:[["aktiv","Kilitlemede katlanır, açınca açılır"],["nicht aktiv","Kapalı"]],
+ effect:"Park halinde aynalar korunur.",
+ warn:"Sadece elektrikli katlanır ayna donanımlı araçlarda çalışır.",risk:"low"},
+{id:"autolock",cat:"Kilit",title:"Hız alınca otomatik kilitleme",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama (PQ)",
+ tags:["kilit","kilitleme","otomatik","15 km","hız","kapı"],
+ key:["Autolock","Automatisch verriegeln"],
+ path:["09 → Adaptasyon (10) → arama: verriegeln (veya lock)","Fahrtbeginn / Geschwindigkeit kanalını aktif yap","Kontak kapanınca açma (Autounlock) için ayrı kanal var"],
+ ch:[["Automatisch verriegeln","~15 km/s üstünde kapılar kilitlenir"],["Automatisch entriegeln","Anahtar çekilince/kontak kapanınca kilit açılır"]],
+ vals:[["aktiv","Çalışır"],["nicht aktiv","Kapalı"]],effect:"Seyir halinde kapılar dışarıdan açılamaz.",warn:"",risk:"low"},
+{id:"singledoor",cat:"Kilit",title:"İlk basışta sadece sürücü kapısını açma",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama (PQ)",
+ tags:["kilit","kapı","tek kapı","sürücü kapısı","kumanda"],
+ key:["Entriegelung","Unlock"],
+ path:["09 → Adaptasyon (10) → arama: Entriegelung","Einzeltür (tek kapı) veya Fahrzeug (tüm araç) seç → Do It!"],
+ ch:[["Entriegelung Funk / Unlocking","Kumandada ilk basışta ne açılacağı"]],
+ vals:[["Einzeltür / single door","İlk basış sadece sürücü kapısı, ikinci basış tümü"],["Fahrzeug / vehicle","Tek basışta tüm kapılar"]],
+ effect:"Gece güvenlik için tek kapı tercih edilir.",warn:"",risk:"low"},
+{id:"horn",cat:"Kilit",title:"Kilitlemede korna sesi",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["korna","kilit","ses","onay","akustik"],
+ key:["Akustische Rückmeldung","Acoustic feedback"],
+ path:["09 → Adaptasyon (10) → arama: Akustische","Verriegeln kanalını ayarla → Do It!"],
+ ch:[["Akustische Rückmeldung Verriegeln","Kilitlerken kısa korna"]],
+ vals:[["aktiv","Kısa korna sesi"],["nicht aktiv","Sessiz"]],effect:"",warn:"Gece yerleşim yerinde rahatsız edici olabilir.",risk:"low"},
+{id:"wiper-rev",cat:"Silecek",title:"Geri viteste arka silecek",plat:["MQB","PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (MQB) / Uzun kodlama (PQ)",
+ tags:["silecek","arka silecek","geri vites","yağmur"],
+ key:["Heckwischer","Rear wiper"],
+ path:["09 → Adaptasyon (10) → arama: Heckwischer","Rückwärtsgang kanalını ayarla → Do It!"],
+ ch:[["Heckwischer bei Rückwärtsgang","Ön silecek çalışırken geri vites takılınca arka silecek bir kez siler"]],
+ vals:[["aktiv","Çalışır"],["nicht aktiv","Kapalı"]],effect:"",warn:"",risk:"low"},
+{id:"wiper-drip",cat:"Silecek",title:"Su fıskiyesi sonrası ek silme (damla silme)",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["silecek","fıskiye","damla","su","nachwischen"],
+ key:["Nachwischen","Drip wipe"],
+ path:["09 → Adaptasyon (10) → arama: Nachwischen","aktiv yap → Do It!"],
+ ch:[["Nachwischen","Cam suyu sonrası birkaç saniye bekleyip bir kez daha siler"]],
+ vals:[["aktiv","Ek silme yapar"],["nicht aktiv","Kapalı"]],effect:"Camdan süzülen damlalar temizlenir.",warn:"",risk:"low"},
+/* ---------- GÖSTERGE ---------- */
+{id:"needle",cat:"Gösterge",title:"Açılışta ibre taraması (needle sweep)",plat:["MQB"],mod:"17",modName:"Gösterge paneli",how:"Uzun kodlama",
+ tags:["gösterge","ibre","needle sweep","açılış","kadran"],
+ key:["Byte 1 Bit 0","Gauge test"],
+ path:["17 - Instruments seç","Gerekirse Güvenlik Erişimi (16): 20103","Kodlama (07) → Uzun Kodlama Yardımcısı","Byte 1 → Bit 0 'Gauge test / Zeigertest aktiv' işaretle → Çık → Do It!"],
+ ch:[["Byte 1, Bit 0","İbre testi (analog göstergeli MQB)"]],
+ vals:[["Bit 0 = 1","Kontak açılınca ibreler sona gidip döner"],["Bit 0 = 0","Kapalı"]],
+ effect:"Sadece görsel efekt.",warn:"Dijital (Active Info Display) göstergede farklı byte'ta olabilir; Uzun Kodlama Yardımcısı'ndaki açıklamayı okumadan bit işaretleme.",risk:"mid"},
+{id:"belt",cat:"Gösterge",title:"Emniyet kemeri uyarısı",plat:["MQB","PQ"],mod:"17",modName:"Gösterge paneli",how:"Adaptasyon / Uzun kodlama",
+ tags:["gösterge","kemer","emniyet kemeri","uyarı","ses","ikaz"],
+ key:["Gurtwarnung","Seat belt warning"],
+ path:["17 → Adaptasyon (10) → arama: Gurt (veya belt)","PQ: 17 → Uzun Kodlama Yardımcısı → seat belt warning bitleri"],
+ ch:[["Gurtwarnung Fahrer / Beifahrer","Sürücü / yolcu kemer uyarısı"]],
+ vals:[["aktiv","Fabrika davranışı: sesli ve ışıklı uyarı"],["nur Lampe","Sadece ikaz lambası, ses yok"],["nicht aktiv","Uyarı tamamen kapalı"]],
+ effect:"",warn:"Güvenlik ile ilgili. Kapatmak trafikte risk ve bazı ülkelerde muayene sorunu demektir; sadece ses kapatma seçeneğini tercih et.",risk:"high"},
+{id:"battery",cat:"Genel",title:"Akü değişince yeni aküyü tanıtma",plat:["MQB"],mod:"19",modName:"CAN Gateway",how:"Adaptasyon",
+ tags:["akü","batarya","start stop","değişim","battery","şarj"],
+ key:["Batterie","Battery"],
+ path:["19 - CAN Gateway seç","Adaptasyon (10) → arama: Batterie (veya battery)","Akü seri numarası, üretici, kapasite (Ah) ve tip (AGM/EFB) kanallarını yeni akünün etiketine göre gir","Do It! → kontağı kapat, aracı birkaç dakika kilitli bırak"],
+ ch:[["Batterieseriennummer / Battery serial number","Yeni akünün seri numarası (etikette yazar)"],["Kapasite ve teknoloji","Şarj stratejisi buna göre ayarlanır"]],
+ vals:[["Doğru tip ve kapasite","Start-stop ve şarj doğru çalışır"],["Kayıt yapılmadı","Start-stop çalışmayabilir, alternatör yeni aküyü eskimiş gibi şarj eder"]],
+ effect:"Akü değiştikten sonra yapılması gereken işlem.",
+ warn:"Start-stop'lu 1.4 TSI'da EFB veya AGM akü bulunur. Aynı tipi tak; düz aküye geçme.",risk:"mid"},
+{id:"service",cat:"Gösterge",title:"Yağ bakımı / servis aralığı sıfırlama",plat:["MQB"],mod:"17",modName:"Gösterge paneli",how:"Adaptasyon",
+ tags:["servis","bakım","yağ","sıfırlama","reset","inspection","longlife","gösterge"],
+ key:["Service","Ölwechsel","Inspektion"],
+ path:["17 → Adaptasyon (10) → arama: Ölwechsel (veya service)","Reset kanalını seç → Reset → Do It!","Alternatif: araç menüsü → Ayarlar → Servis → Sıfırla"],
+ ch:[["Reset Ölwechsel / Oil change reset","Yağ bakımı sayacı"],["Reset Inspektion","Genel servis sayacı"],["Fester / Flexibler Service","Sabit veya esnek (LongLife) aralık"]],
+ vals:[["Sabit aralık (15.000 km / 1 yıl)","Türkiye'de yaygın kullanım"],["Esnek (LongLife)","30.000 km'ye kadar çıkar, VW 504 00 yağ ister"]],
+ effect:"Yağ değişiminden sonra gösterge uyarısı kapanır.",
+ warn:"1.4 TSI'da sabit ve sık yağ değişimi zincir/turbo için daha güvenli. LongLife seçeceksen gerçekten 504 00 yağ kullan.",risk:"low"},
+{id:"17-extras",cat:"Gösterge",title:"Tur sayacı, yağ sıcaklığı, dijital hız",plat:["MQB"],mod:"17",modName:"Gösterge paneli",how:"Uzun kodlama",
+ tags:["gösterge","tur sayacı","lap timer","yağ sıcaklığı","dijital hız","mfa","ekran"],
+ key:["Lap timer","Oil temperature","Digital speed"],
+ path:["17 → gerekirse Güvenlik Erişimi (16): 20103","Kodlama (07) → Uzun Kodlama Yardımcısı","Byte'ları tek tek gez; açıklamasında 'Lap timer', 'Oil temperature display', 'Digital speed display' yazan biti işaretle","Çık → Do It! → kontağı kapatıp aç"],
+ ch:[["Lap timer","Gösterge menüsüne kronometre ekler"],["Oil temperature display","Yağ sıcaklığını göstergede gösterir"],["Digital speed display","Ekranda dijital hız"]],
+ vals:[["Bit işaretli","Menüde görünür"],["Bit boş","Gizli"]],
+ effect:"Gösterge ekranına (MFA) yeni sayfalar eklenir.",
+ warn:"Byte numarası gösterge yazılımına göre değişir, o yüzden burada sabit numara yok. Açıklaması olmayan bite dokunma.",risk:"mid"},
+{id:"startstop",cat:"Genel",title:"Start-stop'u kalıcı kapatma",plat:["MQB"],mod:"19",modName:"CAN Gateway",how:"Bilgi",
+ tags:["start stop","start-stop","kapatma","motor","akü"],
+ key:["Start-Stop"],
+ path:["19 → Adaptasyon (10) → arama: Start-Stop","'Son ayarı hatırla' benzeri bir kanal görüyorsan onu kullan","Yoksa: düğmeyle her sürüşte kapatmak en güvenli yol"],
+ ch:[],vals:[],
+ effect:"2013 model Leon 3'ün ilk yazılımlarında son ayarı hatırlayan kanal genelde yoktur.",
+ warn:"İnternette önerilen 'akü kaydını sil' veya yanlış akü tipi girme yöntemi şarj sistemini bozar, aküyü erken öldürür. Önerilmez.",risk:"high"},
+{id:"engine",cat:"Genel",title:"Motor (01): VCDS ile güç artmaz",plat:["MQB"],mod:"01",modName:"Motor elektroniği",how:"Sadece okuma",
+ tags:["motor","güç","hp","beygir","chip","remap","tsi","act","performans","turbo"],
+ key:["Measuring blocks"],
+ path:["01 - Engine → Hata Kodları (02): okuma ve silme","Gelişmiş Ölçüm Değerleri: turbo basıncı, yağ sıcaklığı, ateşleme gecikmesi izleme"],
+ ch:[["Ölçüm değerleri","Teşhis ve takip için"]],vals:[],
+ effect:"VCDS motor yazılımını değiştirmez; 140 hp'yi artırmak için ayrı yazılım (remap) gerekir.",
+ warn:"01 kodlamasını değiştirme (örneğin ACT silindir kapatma). Motor arıza lambası ve sarsıntılı çalışma yapar.",risk:"high"},
+/* ---------- GENEL ---------- */
+{id:"backup",cat:"Genel",title:"Orijinal kodlamayı yedekleme ve geri dönme",plat:["MQB","PQ","Genel"],mod:"—",modName:"Tüm modüller",how:"Auto-Scan / Kodlama",
+ tags:["yedek","geri al","orijinal","auto scan","hata","geri dönme","kanal"],
+ key:["Auto-Scan","Adaptation log"],
+ path:["Ana ekran → Auto-Scan → Başlat → Kaydet (txt dosyası)","Kodlama ekranında 'Original' kodu kopyala, bir dosyaya yapıştır","Adaptasyonda değişiklik yapınca VCDS bir log tutar: Logs/Adaptation klasörü","Geri dönmek için: aynı ekrana orijinal kodu yapıştır → Do It!"],
+ ch:[["Auto-Scan dosyası","Tüm modüllerin kodu ve hata kodları"],["Adaptation log","Hangi kanalda eski/yeni değer"]],
+ vals:[],effect:"Bir şey ters giderse dakikalar içinde fabrika ayarına dönersin.",warn:"Yedeksiz kodlama yapma. Özellikle 09 ve 17'de.",risk:"low"},
+{id:"pq-lch",cat:"Aydınlatma",title:"PQ (Golf 6 / Passat B7) farlar ve lamba ayarları nerede",plat:["PQ"],mod:"09",modName:"Merkezi Elektronik",how:"Uzun kodlama",
+ tags:["far","farlar","pq","golf 6","passat b7","jetta","uzun kodlama","gündüz","sis","arka","kanal"],
+ key:["Long Coding Helper"],
+ path:["09 → Kodlama (07) → Uzun Kodlama Yardımcısı","Byte'lar arasında gezerek İngilizce açıklamaları oku (Daytime running lights, Fog lights installed, Cornering lights via fog lights, Coming home…)","İstediğin biti işaretle → Çık → Do It!"],
+ ch:[["Gündüz farı bitleri","DRL aktif, park lambası olarak DRL, sinyalde kısma"],["Sis farı bitleri","Sis takılı, sis ile viraj lambası"],["Soğuk/sıcak kontrol bitleri","LED dönüşümü sonrası lamba hatalarını keser"]],
+ vals:[["Bit = 1","Fonksiyon aktif"],["Bit = 0","Fonksiyon kapalı"]],
+ effect:"PQ'da MQB gibi lamba kanalları yok; çoğu ayar uzun kodlama bitlerindedir.",
+ warn:"Byte numaraları modül parça numarasına (1K0937049…, 5K0937087…) göre değişir. Sabit byte ezberine güvenme, yardımcıdaki açıklamayı oku.",risk:"mid"}
+];
+
+/* ---------- 3. TUR: internetten derlenen Leon 5F / MQB kodlamaları ---------- */
+const PATCH={
+ "comfort-turn":{ch:[["Turn signal control - Komfortblinken Blinkzyklen","Kola hafif dokununca kaç kez yanacağı"],["Komfortblinken Menüsteuerung","Ekrandan değiştirilebilsin"]],
+   vals:[["2–5 (bazı yazılımlarda 1–5)","Fabrika değeri 3"],["nicht aktiv","Konfor sinyal tamamen kapanır"]],
+   effect:"Kodladıktan sonra sayı değişmediyse MIB ekranında: CAR → Ayarlar → Fabrika ayarları → Aydınlatma sıfırla. Menüdeki ayar kodlamayı ezer.",conf:"ok",
+   src:[["vag-coding.net: Comfort turn signal","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-comfort-turn-signal/"]]},
+ "wiper-rev":{ch:[["Wiper - Rear Wiping in Reverse Gear (Heckwischen bei Rückwärtsgang)","Ön silecek çalışırken geri viteste arka silecek"]],conf:"ok",
+   src:[["vag-coding.net: Deactivate rear wiper when reversing","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-deactivate-rear-wiper-when-reversing/"]]},
+ "ch":{vals:[["aktiv","Fonksiyon çalışır"],["nicht aktiv","Fonksiyon kapanır"],["Süre 30 → 90 sn","Menüdeki üst sınır 30 sn'den 90 sn'ye çıkar (Coming ve Leaving için ayrı kanal)"]],conf:"ok",
+   src:[["vag-coding.net: Increase Coming/Leaving Home time","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-increase-coming-leaving-home-time-in-menu/"],["vag-coding.net: CH/LH with fog, xenon, LED","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-coming-leaving-home-with-fog-lamps-xenon-and-leds/"]]},
+ "mirrors":{key:["Access Control 2","Spiegel","mirror"],
+   ch:[["Access Control 2 - Spiegelanklappen ...","Kumandayla ayna katlama şekli"],["Otomatik katlama","Kilitleyince kendiliğinden katlanma"]],
+   vals:[["by convenience operation via remote control key","Fabrika: kilit tuşuna basılı tutunca katlanır"],["by lock command via remote control key","Kilit tuşuna kısa basınca katlanır"]],conf:"ok",
+   src:[["vag-coding.net: Mirror folding with remote","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-mirror-folding-adjustment-with-remote-control/"],["vag-coding.net: Automatic folding of mirrors","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-automatic-folding-of-mirrors/"]]},
+ "needle":{conf:"ok",src:[["seatcupra.net: VCDS How-To MK3 Leon","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+ "17-extras":{title:"Yağ sıcaklığı ve dijital hız göstergesi",
+   tags:["gösterge","yağ sıcaklığı","dijital hız","mfa","ekran","byte","long coding"],
+   key:["Display Oil Temperature","Displaydarstellung"],
+   path:["17 → gerekirse 20103","Yağ sıcaklığı: Kodlama (07) → Uzun Kodlama Yardımcısı → Byte 10 → Bit 1 'Display Oil Temperature'","Başka kaynak Byte 4 Bit 3 diyor: önce yardımcıdaki etiketi oku, hangisinde bu yazı varsa onu işaretle","Dijital hız: 17 → Adaptasyon (10) → Displaydarstellung → Version 2"],
+   ch:[["Byte 10 Bit 1 (vag-coding) / Byte 4 Bit 3 (ascoding)","Yağ sıcaklığı göstergesi"],["Displaydarstellung (adaptasyon)","Ekran düzeni versiyonu"]],
+   vals:[["Bit işaretli","MFA'da yağ sıcaklığı sayfası çıkar"],["Displaydarstellung Version 2","Dijital hız gösterimi (tek forum kaynağı)"]],
+   warn:"Kaynaklar byte numarasında çelişiyor. Etikette 'Oil temperature' yazmayan biti işaretleme.",conf:"mixed",
+   src:[["vag-coding.net: Oil temperature","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-oil-temperature-on-odb/"],["AS.Coding: Leon 3 5F","https://www.ascoding.ch/en/seat-leon-3-5f-e/"],["vag-extras.hu: Leon 5F","https://vag-extras.hu/en/seat/leon-5f/"]]},
+ "belt":{path:["17 → Kodlama (07) → Uzun Kodlama Yardımcısı","Byte 0, Bit 2–4: açılır listeden 'Seat Belt Warning Inactive' (veya sadece ses kapalı seçeneği)","Liste yoksa Byte 0 Bit 2'yi kaldır","Alternatif: 17 → Adaptasyon → kemer uyarısı versiyonu 2 → 3 (sesi susturur, lamba kısa süre yanar)"],
+   ch:[["Byte 0, Bit 2–4","Kemer uyarısı tipi"]],conf:"mixed",
+   src:[["myturbodiesel: Seat belt warning VCDS","https://www.myturbodiesel.com/threads/turning-off-seat-belt-warning-in-vcds.15520/"],["seatcupra.net: How-To p.21","https://www.seatcupra.net/forums/threads/vcds-how-to-guides-mk3-leon-5f.393714/page-21"]]},
+ "service":{ch:[["Reset Ölwechsel / Oil change reset","Yağ bakımı sayacı"],["Kanal 44 (servis aralığı gün)","Yağ bakım aralığı süresi"],["Fester / Flexibler Service","Sabit veya esnek aralık"]],
+   vals:[["365 gün","Normal yağ, yıllık bakım"],["730 gün","LongLife yağ (VW 504 00)"],["Reset","Sayaç sıfırlanır"]],conf:"mixed",
+   src:[["Scribd: Hidden features Leon MK3","https://www.scribd.com/document/892695053/VAG-CODINGS-SEAT-LEON-MK3"]]},
+ "battery":{conf:"ok",src:[["vag-coding.net: Reprogramming a new battery","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-reprogramming-a-new-battery/"],["seatcupra.net: Replace the battery inc VCDS","https://www.seatcupra.net/forums/threads/how-to-replace-the-battery-inc-vcds-coding.481095/"]]},
+ "ebf":{conf:"mixed",warn:"Leon 5F için kanal adı ve değeri tek kaynakta geçiyor; 09 adaptasyonda 'Notbrems' veya 'emergency brake' araması yap, kanal çıkmıyorsa modül desteklemiyor."}
+};
+const MORE=[
+{id:"lap",cat:"Gösterge",title:"Tur sayacı (Lap timer)",plat:["MQB"],mod:"17",modName:"Gösterge paneli",how:"Uzun kodlama",
+ tags:["gösterge","tur sayacı","lap timer","kronometre","byte","long coding"],key:["Lap Timer active"],
+ path:["17 → gerekirse 20103","Kodlama (07) → Uzun Kodlama Yardımcısı","Byte 1 → Bit 3 'Lap Timer active' işaretle","Çık → Do It! → kontağı kapatıp aç"],
+ ch:[["Byte 1, Bit 3","Tur sayacı"]],vals:[["Bit 3 = 1","MFA menüsünde tur sayacı çıkar"],["Bit 3 = 0","Kapalı"]],
+ effect:"Gösterge menüsüne kronometre ekler.",warn:"AS.Coding farklı byte veriyor (Byte 4). Etikette 'Lap Timer' yazıyorsa işaretle.",risk:"low",conf:"mixed",
+ src:[["vag-coding.net: Lap Timer","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-lap-timer/"],["AS.Coding: Leon 3 5F","https://www.ascoding.ch/en/seat-leon-3-5f-e/"]]},
+{id:"teardrop",cat:"Silecek",title:"Damla silme (Tränenwischen) ön ve arka",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["silecek","damla","tränenwischen","teardrop","fıskiye","arka silecek"],key:["Traenenwischen"],
+ path:["09 → 31347 → Adaptasyon (10) → arama: Traenenwischen","Ön: Windshield wiper - Traenenwischen Front Status → active","Arka: Rear Window Wiper - Traenenwischen Heck → active","Do It!"],
+ ch:[["Windshield wiper - Traenenwischen Front Status","Ön cam suyu sonrası ek silme"],["Rear Window Wiper - Traenenwischen Heck","Arka cam için aynısı"]],
+ vals:[["active","Fıskiyeden birkaç saniye sonra bir kez daha siler"],["not active","Kapalı"]],
+ effect:"Camdan süzülen damlalar temizlenir.",warn:"Uzun kodlama yolu (Wischer Byte 01 Bit 3) test edilmemiş, adaptasyonu kullan.",risk:"low",conf:"ok",
+ src:[["seatcupra.net: How-To p.23","https://www.seatcupra.net/forums/threads/vcds-how-to-guides-mk3-leon-5f.393714/page-23"]]},
+{id:"rear-comfort-wipe",cat:"Silecek",title:"Arka silecek konfor modu menüsü",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["silecek","arka silecek","konfor","menü"],key:["Komfortwischen HW"],
+ path:["09 → 31347 → Adaptasyon (10)","Heckscheibenwischer - Menuesteuerung Komfortwischen HW → Active","Do It!"],
+ ch:[["Heckscheibenwischer - Menuesteuerung Komfortwischen HW","Arka silecek ayarı ekran menüsünde görünsün"]],
+ vals:[["Active","MIB'de arka silecek ayarı çıkar"],["Not active","Gizli"]],effect:"",warn:"",risk:"low",conf:"ok",
+ src:[["seatcupra.net: How-To p.37","https://www.seatcupra.net/forums/threads/vcds-how-to-guides-mk3-leon-5f.393714/page-37"]]},
+{id:"mirror-dip",cat:"Konfor",title:"Geri viteste yolcu aynasını indirme",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["ayna","geri vites","indirme","spiegelabsenkung","park"],key:["Spiegelabsenkung"],
+ path:["09 → 31347 → Adaptasyon (10)","Access Control 2 - Spiegelabsenkung Bei Rueckwaertsfahrt → Active","Do It!","Kullanırken ayna düğmesi yolcu aynası konumunda olmalı"],
+ ch:[["Access Control 2 - Spiegelabsenkung Bei Rueckwaertsfahrt","Geri viteste yolcu aynası aşağı bakar"]],
+ vals:[["Active","Geri vites takınca ayna iner, çıkınca geri gelir"],["Not active","Kapalı"]],
+ effect:"Kaldırım ve jant görünür, park kolaylaşır.",warn:"Aynada elektrikli ayar olmalı. Bazı araçlarda hafızalı ayna gerekir; donanım yoksa çalışmaz.",risk:"low",conf:"mixed",
+ src:[["seatcupra.net: How-To p.23","https://www.seatcupra.net/forums/threads/vcds-how-to-guides-mk3-leon-5f.393714/page-23"]]},
+{id:"seat-sound",cat:"Multimedya",title:"Açılışta Seat Sound logosu",plat:["MQB"],mod:"5F",modName:"Multimedya (MIB)",how:"Adaptasyon",
+ tags:["multimedya","mib","ekran","logo","seat sound","açılış"],key:["Startup_Screen_Sticker_HMI"],
+ path:["5F - Information Electr. seç","Adaptasyon (10) → arama: Startup_Screen","Startup_Screen_Sticker_HMI → 00 01","Do It! → MIB'yi yeniden başlat (ses düğmesine 10 sn bas)"],
+ ch:[["Startup_Screen_Sticker_HMI","Açılış ekranındaki ek logo"]],vals:[["00 01","Seat Sound logosu"],["00 00","Logo yok (fabrika)"]],
+ effect:"Sadece görsel.",warn:"Seat Sound donanımı yoksa yanıltıcı olur. MIB1 için forum bilgisi.",risk:"low",conf:"mixed",
+ src:[["Ross-Tech forum: Seat Sound MIB Gen1","https://forums.ross-tech.com/index.php?threads/10754/"]]},
+{id:"compass",cat:"Multimedya",title:"Navigasyonda pusula gösterimi (sadece FL / MIB2)",plat:["MQB"],mod:"5F",modName:"Multimedya (MIB)",how:"Adaptasyon",
+ tags:["multimedya","mib","pusula","navigasyon","ekran"],key:["menu_display_compass"],
+ path:["5F → 31347 → Adaptasyon (10)","Car_Function_Adaptations_Gen2 - menu_display_compass → active","Do It!"],
+ ch:[["Car_Function_Adaptations_Gen2 - menu_display_compass","Pusula menüsü"]],vals:[["active","Pusula görünür"],["not active","Fabrika"]],
+ effect:"",warn:"Gen2 kanalı makyajlı (2017+) MIB2 içindir. 2013 aracındaki MIB1'de bu kanal büyük ihtimalle yok.",risk:"low",conf:"mixed",
+ src:[["seatcupra.net: How-To p.21","https://www.seatcupra.net/forums/threads/vcds-how-to-guides-mk3-leon-5f.393714/page-21"]]},
+{id:"vim",cat:"Multimedya",title:"Seyir halinde video (Video in Motion)",plat:["MQB"],mod:"5F",modName:"Multimedya (MIB)",how:"Bilgi",
+ tags:["multimedya","video","vim","seyir","film"],key:[],
+ path:["2013 Leon MIB1'de VCDS ile genelde yapılamaz; forumlarda VCP veya OBDeleven gerektiği yazıyor"],ch:[],vals:[],
+ effect:"Bu kayıt sadece bilgi içindir.",warn:"Sürüşte ekranda video izlemek Türkiye dahil çoğu ülkede yasak ve tehlikeli. VCP ile EEPROM değiştirmek MIB'yi bozabilir.",risk:"high",conf:"mixed",
+ src:[["CarPort forum: VIM Leon 5F","https://forum.carport-diagnose.de/topic/1691-video-in-motion-%C3%BCberhaupt-m%C3%B6glich-leon-5f/"]]},
+{id:"steering",cat:"Sürüş",title:"Direksiyon ağırlığı (44)",plat:["MQB"],mod:"44",modName:"Direksiyon desteği",how:"Bilgi",
+ tags:["direksiyon","ağırlık","sert","44","steering"],key:["Kennlinie"],
+ path:["44 → Güvenlik 19249 (bazı kaynaklarda 17580)","Adaptasyon (10) → direksiyon karakteristiği kanalı varsa: Comfort / Automatic / Dynamic"],
+ ch:[["Lenkungskennlinie / steering characteristic","Destek eğrisi (aracın yazılımında varsa)"]],vals:[["Dynamic","Daha ağır direksiyon"],["Comfort","Daha hafif"]],
+ effect:"Seat Drive Profile'lı FR'de bu zaten modlarla değişir.",
+ warn:"Ross-Tech forumunda karakteristiğin adaptasyonla değişmediği, sadece yazılım yüklemeyle değiştiği yazıyor. Bu modülde yanlış işlem direksiyon arıza lambası ve destek kaybı yapar.",risk:"high",conf:"mixed",
+ src:[["vwvortex: Increase steering weight","https://www.vwvortex.com/threads/diy-permanently-increase-steering-weight-via-vcds.8410537/"],["Ross-Tech forum: 44 Steering MQB","https://forums.ross-tech.com/index.php?threads/19474/"]]},
+{id:"onedown",cat:"Genel",title:"Daha fazla kodlama listesi (kaynaklar)",plat:["MQB"],mod:"—",modName:"Leon 5F kodlama listeleri",how:"Kaynak",
+ tags:["liste","kaynak","forum","tüm kodlamalar","obdeleven"],key:[],path:["Aşağıdaki listelerde Leon 5F için yüzlerce madde var; burada olmayan bir şeyi bulursan 'Kendi notunu ekle' ile kaydet"],
+ ch:[],vals:[],effect:"",warn:"",risk:"low",conf:"ok",
+ src:[["vag-coding.net: Leon 5F tüm kodlamalar","https://www.vag-coding.net/seat-cupra/leon-5f/"],["seatcupra.net: VCDS How-To MK3 Leon","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"],["vag-extras.hu: Leon 5F","https://vag-extras.hu/en/seat/leon-5f/"],["bolidenforum: Leon 5F liste","https://www.bolidenforum.de/forum/threads/uebersicht-liste-codierung-und-anpassungen-obdeleven-seat-leon-5f.16676/"],["seatforum.de: Leon 5F codieren","https://www.seatforum.de/threads/307049-vcds-vcp-obdeleven-codieren-leon-5f/page3"],["hochfrankencoding: Leon 5F","https://hochfrankencoding.jimdofree.com/codierungen/seat/seat-leon-5f/"]]}
+];
+DATA.forEach(e=>{if(PATCH[e.id])Object.assign(e,PATCH[e.id])});
+DATA.push(...MORE);
+
+const PATCH2={
+ "mirror-dip":{how:"Uzun kodlama (52) + Adaptasyon (09)",mod:"52+09",
+   path:["52 - Door Elect, Pass. → Kodlama (07) → Uzun Kodlama Yardımcısı → Byte 04 → Bit 2 ve Bit 3 işaretle → Do It!","09 → 31347 → Adaptasyon (10)","Access Control 2 - Spiegelabsenkung Bei Rueckwaertsfahrt → Active","Access Control 2 - Menuesteuerung Spiegelabsenkung → Active","Ayna ayar düğmesi yolcu aynası konumunda olmalı. Kaynak İngiltere'den (sağdan direksiyon) ve orada 'L' diyor; Türkiye'de yolcu tarafı sağ olduğu için 'R' konumu olmalı"],
+   ch:[["52 Byte 04 Bit 2 + Bit 3","Yolcu kapı modülünde ayna indirme özelliği"],["Access Control 2 - Spiegelabsenkung Bei Rueckwaertsfahrt","Geri viteste ayna iner"],["Access Control 2 - Menuesteuerung Spiegelabsenkung","Ekrandan aç/kapa"]],
+   conf:"ok",test:"seatcupra rehberinde yazarların Leon FR'ında çalıştı.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+ "horn":{title:"Kilitlemede / açmada korna (alarm ötmesi)",key:["Akustische Rueckmeldung","Rueckmeldungssignale"],
+   path:["09 → 31347 → Adaptasyon (10)","Rueckmeldungssignale - Akustische Rueckmeldung entriegeln → yes","Rueckmeldungssignale - Akustische Rueckmeldung verriegeln → yes","Rueckmeldungssignale - Akustische Rueckmeldung global → Active","Rueckmeldungssignale - Menuesteuerung Akustische Rueckmeldung → Active","Ses seviyesi/tipi kanalı (PDF'te adı kısmen okunmuyor) → Normal"],
+   ch:[["Akustische Rueckmeldung entriegeln","Kilit açarken ses"],["Akustische Rueckmeldung verriegeln","Kilitlerken ses"],["Akustische Rueckmeldung global","Genel aç/kapa"],["Menuesteuerung Akustische Rueckmeldung","MIB'de araç ayarlarından değiştirilebilsin"]],
+   vals:[["yes / Active","Kısa korna ile onay"],["no / not active","Sessiz"]],
+   effect:"Değişiklikleri hızlı yap: güvenlik kodu zaman aşımına uğrarsa 31347'yi tekrar gir, kaldığın kanaldan devam et. Ses gelmiyorsa MIB → Araç ayarlarında kontrol et.",
+   conf:"ok",test:"seatcupra rehberinde yazarların Leon FR'ında çalıştı.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+ "needle":{test:"seatcupra rehberinde yazarların Leon FR'ında çalıştı.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+ "ambient":{path:["09 → 31347 → Adaptasyon (10)","Her sürüş modunda kırmızı ambiyans: Leuchte17TFL R BLK SR B3 … - Lichtfunktion A17 → nicht aktiv (Inactive)","Leuchte16BLK SL B35 … - Lichtfunktion B16 → Ambientelicht 3","Kapı şeritlerini tam parlak yapmak için ilgili Dimmwert = 127","Ekrandan renk menüsü makyajlı (2017+) araçlarda var, 2013'te yok"],
+   vals:[["Lichtfunktion A17 = nicht aktiv","Beyaz ambiyans devreden çıkar"],["Lichtfunktion B16 = Ambientelicht 3","Kırmızı ambiyans tüm modlarda yanar"],["Dimmwert 127","Tam parlaklık"]],
+   conf:"ok",test:"seatcupra rehberinde yazarların Leon FR'ında çalıştı."},
+ "17-extras":{title:"Yağ sıcaklığı göstergesi ve FIS karbon görünüm",
+   key:["Display Oil Temperature","Displaydarstellung"],
+   path:["17 → gerekirse 20103","Yağ sıcaklığı: Kodlama (07) → Uzun Kodlama Yardımcısı → Byte 10 Bit 1 'Display Oil Temperature' (başka kaynak Byte 4 diyor, etikete bak)","FIS karbon görünüm: 17 → Adaptasyon (10) → Displaydarstellung → Version 2"],
+   ch:[["Byte 10 Bit 1 / Byte 4","Yağ sıcaklığı sayfası"],["Displaydarstellung","Gösterge ekranının görünümü"]],
+   vals:[["Bit işaretli","MFA'da yağ sıcaklığı çıkar"],["Displaydarstellung Version 2","Gösterge ekranı karbon desenli arka plan (önceki sürümde yanlışlıkla 'dijital hız' yazmıştım)"]],
+   test:"Karbon görünüm: seatcupra rehberinde 'çalışmadı, gerek duyulmadı veya sorun çıkardı' bölümünde. Dikkatli dene."},
+ "lap":{test:"seatcupra rehberinde 'çalışmadı, gerek duyulmadı veya sorun çıkardı' bölümünde. Dikkatli dene.",src:[["vag-coding.net: Lap Timer","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-lap-timer/"],["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+ "rear-comfort-wipe":{conf:"mixed",test:"seatcupra rehberinde 'çalışmadı, gerek duyulmadı veya sorun çıkardı' bölümünde. Dikkatli dene.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+ "fog-corner":{path:["09 → 31347 → Adaptasyon (10)","Leuchte12NL LB45 - Lichtfunktion B12 → Abbiegelicht links","Leuchte13NL RB5 - Lichtfunktion B13 → Abbiegelicht rechts","Kısa far açıkken direksiyon açısına göre ilgili sis yanar"],
+   test:"seatcupra rehberinde 'çalışmadı, gerek duyulmadı veya sorun çıkardı' bölümünde. Dikkatli dene.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]}
+};
+const MORE2=[
+{id:"rear-drl",cat:"Aydınlatma",title:"Arka stop lambalarını gündüz farıyla yakmak",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (lamba kanalı)",
+ tags:["arka","stop","gündüz","drl","tfl","arka far","park","kanal"],key:["Dauerfahrlicht","Leuchte23SL","Leuchte26NSL"],
+ path:["09 → 31347 → Adaptasyon (10)","Tagfahrlicht - Dauerfahrlicht aktiviert zusaetzlich Standlicht → Active","Leuchte23SL HLC10 - Lichtfunktion D23 → Tagfahrlicht","Leuchte24SL HRA65 - Lichtfunktion D24 → Tagfahrlicht","Leuchte26NSL LA72 - Lichtfunktion D26 → Tagfahrlicht","Leuchte27NSL RC6 - Lichtfunktion D27 → Tagfahrlicht"],
+ ch:[["Dauerfahrlicht aktiviert zusaetzlich Standlicht","Gündüz farı yanınca park lambaları da yansın"],["Leuchte23SL / 24SL (D23 / D24)","Arka dış park LED şeritleri"],["Leuchte26NSL / 27NSL (D26 / D27)","Arka iç park LED şeritleri (bagaj kapağı)"]],
+ vals:[["Lichtfunktion D = Tagfahrlicht","Kanal gündüz farıyla birlikte yanar"],["Lichtfunktion D = nicht aktiv","Fabrika: sadece park/kısa farda yanar"]],
+ effect:"Gündüz sürüşte arka stop lambaları da yanar, araç arkadan daha görünür olur.",
+ warn:"D yuvası doluysa üzerine yazma; önce mevcut değeri not al. Sadece 4 kanalı değiştir.",risk:"mid",conf:"ok",test:"seatcupra rehberinde yazarların Leon FR'ında çalıştı.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"],["VCDS Wiki (DE): Rückleuchten mit TFL","https://forum.vcdspro.de/index.php?%2Fwiki%2Fvehicle%2Fseat%2Fleon%2Fseat-leon-3-5f-r97%2Farea%2Ftweaks%2Fcontent%2Fr%C3%BCckleuchten-mit-tfl-freischalten-seat-5f-vfl-r208="]]},
+{id:"blower",cat:"Konfor",title:"Klima AUTO modunda fan hızını göstermek",plat:["MQB"],mod:"08",modName:"Klima (Auto HVAC)",how:"Uzun kodlama",
+ tags:["klima","fan","üfleme","auto","climatronic","ekran"],key:["Blower Status Display"],
+ path:["08 - Auto HVAC → Kodlama (07) → Uzun Kodlama Yardımcısı","Byte 11 → Bit 6 'Blower Status Display in AUTO mode active' işaretle","Çık → Do It!"],
+ ch:[["Byte 11, Bit 6","AUTO modunda fan seviyesi göstergesi"]],vals:[["Bit 6 = 1","AUTO'dayken fan çubukları görünür"],["Bit 6 = 0","Fabrika: AUTO'da fan seviyesi gizli"]],
+ effect:"Klimanın otomatikte hangi fan hızında çalıştığını görürsün.",warn:"Sadece otomatik klimalı (Climatronic) araçlarda.",risk:"low",conf:"ok",test:"seatcupra rehberinde yazarların Leon FR'ında çalıştı.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+{id:"rain-close",cat:"Konfor",title:"Yağmur başlayınca camları kapatma",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon",
+ tags:["cam","yağmur","kapatma","sunroof","sensör"],key:["Regenschliessen"],
+ path:["09 → 31347 → Adaptasyon (10)","Access Control 2 - Regenschliessen → permanent","Access Control 2 - Menuesteuerung Regenschliessen → active","Do It!"],
+ ch:[["Access Control 2 - Regenschliessen","Park halindeyken yağmur algılanınca camlar kapanır"],["Access Control 2 - Menuesteuerung Regenschliessen","Ekrandan aç/kapa"]],
+ vals:[["permanent","Her zaman çalışır"],["nicht aktiv","Kapalı"]],
+ effect:"",warn:"Yağmur sensörü gerekir. Kapanma sırasında içeride kimse olmamalı.",risk:"low",conf:"mixed",test:"seatcupra rehberinde 'çalışmadı, gerek duyulmadı veya sorun çıkardı' bölümünde. Dikkatli dene.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]},
+{id:"battery-check",cat:"Gösterge",title:"Akü durumunu göstergede görme (kodlamasız)",plat:["MQB"],mod:"—",modName:"Gösterge düğmesi",how:"Kodlama gerekmez",
+ tags:["akü","batarya","gösterge","trip","kontrol"],key:[],
+ path:["Göstergedeki trip sıfırlama düğmesine (0.0 / SET) basılı tut","Akü göstergesi yanınca bırak","Akü durumu ekranda görünür"],
+ ch:[],vals:[],effect:"VCDS'ye gerek olmadan akü durumunu kontrol edersin.",warn:"",risk:"low",conf:"mixed",test:"seatcupra rehberinde ek bilgi olarak geçiyor.",src:[["seatcupra.net: VCDS How-To MK3 Leon 5F (PDF)","https://www.seatcupra.net/forums/resources/vcds-how-to-guides-mk3-leon-5f.5/"]]}
+];
+DATA.forEach(e=>{if(PATCH2[e.id])Object.assign(e,PATCH2[e.id])});
+DATA.push(...MORE2);
+
+const MORE3=[
+{id:"us-sport",cat:"Aydınlatma",title:"Spor modunda Amerikan park (sinyaller sönük yanar)",plat:["MQB"],mod:"09",modName:"Merkezi Elektronik",how:"Adaptasyon (lamba kanalı) – ön 10, arka 8 satır",
+ tags:["amerikan park","us park","us","sinyal","spor","sport","mode","sürüş modu","drive profile","gündüz","ön","arka","park lambası","kanal"],
+ key:["Leuchte 0 BLK VL B36","Leuchte1BLK VRB20","Leuchte18BLK","Leuchte19BLK"],
+ path:["09 → Güvenlik Erişimi (16): 31347 → Adaptasyon (10)","Üstteki listeden kanalı seç, alttaki listeden yeni değeri seç → Do It!","Önce ön 10 satırı yap, dene; beğenirsen arka 8 satırı yap","Her satırın orijinal değeri tabloda parantez içinde; geri almak için onlara dön","Sadece makyaj öncesi Leon 5F (2013–2016) için. Kaynaktaki modül: 5Q0 937 084 Q"],
+ ch:[
+  ["ÖN 1 · Leuchte 0 BLK VL B36 - Lichtfunktion C 0","Standlicht allgemein (Schlusslicht; Positionslicht; Begrenzungslicht)  (orijinal: nicht aktiv)"],
+  ["ÖN 2 · Leuchte1BLK VRB20 - Lichtfunktion C 1","Standlicht allgemein (...)  (orijinal: nicht aktiv)"],
+  ["ÖN 3 · Leuchte 0 BLK VL B36 - Lichtfunktion D 0","Ambientlicht 4  (orijinal: nicht aktiv)"],
+  ["ÖN 4 · Leuchte1BLK VRB20 - Lichtfunktion D 1","Ambientlicht 4  (orijinal: nicht aktiv)"],
+  ["ÖN 5 · Leuchte 0 BLK VL B36 - Dimmwert CD 0","0–100 arası parlaklık, örnek 30  (orijinal: 0)"],
+  ["ÖN 6 · Leuchte1BLK VRB20 - Dimmwert CD 1","0–100, örnek 30  (orijinal: 0)"],
+  ["ÖN 7 · Leuchte 0 BLK VL B36 - Lichtfunktion E 0","Blinken links Dunkelphase  (orijinal: nicht aktiv)"],
+  ["ÖN 8 · Leuchte1BLK VRB20 - Lichtfunktion E 1","Blinken rechts Dunkelphase  (orijinal: nicht aktiv)"],
+  ["ÖN 9 · Leuchte 0 BLK VL B36 - Dimming Direction EF 0","minimize  (orijinal: maximize)"],
+  ["ÖN 10 · Leuchte1BLK VRB20 - Dimming Direction EF 1","minimize  (orijinal: maximize)"],
+  ["ARKA 1 · Leuchte18BLK HLA60 - Lichtfunktion D","Ambientlicht 4  (orijinal: nicht aktiv)"],
+  ["ARKA 2 · Leuchte19BLK HRC31 - Lichtfunktion D","Ambientlicht 4  (orijinal: nicht aktiv)"],
+  ["ARKA 3 · Leuchte18BLK HLA60 - Dimmwert CD","0–100, örnek 30  (orijinal: 0)"],
+  ["ARKA 4 · Leuchte19BLK HRC31 - Dimmwert CD","0–100, örnek 30  (orijinal: 0)"],
+  ["ARKA 5 · Leuchte18BLK HLA60 - Lichtfunktion E","Blinken links Dunkelphase  (orijinal: nicht aktiv)"],
+  ["ARKA 6 · Leuchte19BLK HRC31 - Lichtfunktion E","Blinken rechts Dunkelphase  (orijinal: nicht aktiv)"],
+  ["ARKA 7 · Leuchte18BLK HLA60 - Dimming Direction EF","minimize  (orijinal: maximize)"],
+  ["ARKA 8 · Leuchte19BLK HRC31 - Dimming Direction EF","minimize  (orijinal: maximize)"]],
+ vals:[["Lichtfunktion C = Standlicht allgemein","Sinyal, park lambası / kısa far yanınca sönük yanar (her modda)"],["Lichtfunktion D = Ambientlicht 4","Sürüş modu Sport iken sönük yanar"],["Dimmwert CD","C ve D yanarken parlaklık; 30 civarı Amerikan park görünümü verir"],["Lichtfunktion E = Blinken … Dunkelphase + EF minimize","Sinyal verirken lamba sönük kalmaz, tamamen sönüp yanar; sinyal net görünür"]],
+ effect:"Mode tuşuyla Sport'a geçince ön (ve istersen arka) sinyaller park lambası gibi sönük turuncu yanar, sinyal verince normal yanıp söner.",
+ warn:"1) Ön 1–2. satırlar (C = Standlicht) sinyali Sport dışında da, farlar açıkken yakar. Sadece Sport'ta istiyorsan bu iki satırı atla; bu benim çıkarımım, kaynakta yazmıyor. 2) FR'de ön sinyaller LED; bazı LED sinyaller kısılamaz ve tam parlak yanar. Öyleyse geri al. 3) Kaynakta arka kanallar kısa yazılmış ('Leuchte 18 BLK – Lichtfunktion D 0'); VCDS'de Leuchte18BLK HLA60 ve Leuchte19BLK HRC31 olarak çıkar. 4) Önde sürekli yanan turuncu ışık Türkiye ve AB kurallarına uymaz; muayene ve ceza riski var.",
+ risk:"mid",conf:"ok",test:"vag-coding.net Leon 5F rehberi; ekran görüntüleri 5Q0 937 084 Q modülünden. Senin araçta denenmedi.",
+ imgs:[["img/us-1.jpg","Lichtfunktion C 0 = Standlicht allgemein"],["img/us-2.jpg","Lichtfunktion D 0 = Ambientlicht 4"],["img/us-3.jpg","Dimmwert CD 0 = 30"],["img/us-4.jpg","Dimming Direction EF 0"]],
+ src:[["vag-coding.net: US turn signal in Sport mode","https://www.vag-coding.net/seat-cupra/leon-5f/leon-5f-us-turn-signal-in-sport-mode/"],["VCDS Wiki (DE): US-Standlicht","https://vcds.fandom.com/de/wiki/Volkswagen_Golf_5G"]]}
+];
+DATA.push(...MORE3);
+
+const LEON={
+drl:"Senin araçta gündüz farı ampullü (halojen far içinde). Kanal adı Leuchte2SL / Leuchte3SL. Kapatma/açma sorunsuz; parlaklıkla oynarken düşük değerlerde ampul titreyebilir.",
+"drl-dim":"Gündüz farın ampullü: kanallar Leuchte2SL VL (sol) ve Leuchte3SL VR (sağ); 4TFL / 5 TFL sadece besleme. Sinyalde kısma (Dimmwert CD = 0) ampulde sorunsuz çalışır. Normal parlaklığı (AB) 40'ın altına indirme, ampul titreyebilir veya lamba arızası uyarısı gelebilir.",
+ch:"FR'de genelde ışık/yağmur sensörü vardır. Far anahtarında AUTO konumu varsa sensör var demektir; otomatik Coming/Leaving Home açılabilir.",
+"comfort-turn":"Leon 3'te Menüsteuerung açılırsa sinyal sayısı ekrandaki araç ayarlarından da değiştirilebilir.",
+"fog-corner":"Senin araçta ön sis var ve halojen farda yerleşik viraj ışığı yok; bu ayar sana gerçek bir viraj ışığı kazandırır. Kanallar Leuchte12NL LB45 (sol, Lichtfunktion B12) ve Leuchte13NL RB5 (sağ, B13). Not: seatcupra yazarlarının aracında bu ayar sorunlu bölümdeydi; çalışmazsa orijinale dön.",
+"rear-fog":"Leon 5F'te arka sis tek kanal: Leuchte28RFL L C11 (adı RFL olsa da arka sis budur). Karşı taraftaki Leuchte29RFL R A64 geri vites lambasıdır; ona sis görevi verirsen geri vites lambası sis gibi yanar. NSL diye arama yapma: 26/27 NSL park lambasıdır. Leon'da iki taraflı arka sis kodlamayla yapılamaz.",
+lasttyp:"Senin araçta arka stoplar fabrikadan LED ama arka sinyaller ampullü; LED stop kanallarının (fren, park) Lasttyp'ine dokunma. Gündüz farı ve sinyaller ampullü; bunları LED'e çevirirsen Lasttyp değişikliği gerekebilir. LED dönüşümü düşünüyorsan sorun çıkaracak olanlar ön ampuller (sinyal, kısa far) ve plaka lambası. Kanal numaraları için 'Leon 5F lamba kanal haritası' kartına bak. Leon 3'te en sık lamba hatası plaka (KZL) ve iç aydınlatma LED dönüşümünde çıkar.",
+ebf:"Leon 3 destekler. 2013 ilk yazılımlarında kanal yoksa modül yazılımı desteklemiyordur.",
+mirrors:"Ayna ayar düğmesinde katlama konumu yoksa araçta katlanır ayna yoktur, bu ayar işe yaramaz.",
+needle:"2013 Leon'da analog gösterge var; Byte 1 Bit 0 bu göstergede geçerli.",
+windows:"Senin araçta sunroof yok; ayar sadece camları açıp kapatır.",
+battery:"2013 Leon 1.4 TSI start-stop'lu, bu işlem senin araçta gerekli.",
+ambient:"FR pakette kapı ambiyansı standart: kırmızı (Leuchte16) ve beyaz (Leuchte17) kanallar sende dolu. Mode tuşuyla Sport'ta kırmızı, diğer modlarda beyaz yanar; her modda kırmızı için bu karttaki iki satır yeterli.",
+interior:"Tavan lambaları 09 kanal listesinde yok, tavan modülünden çalışır. Yanma/sönme süreleri için Innenlicht araması yeterli.",
+"us-sport":"Senin araç için uygun: ön sinyaller (halojen far) ve arka sinyaller (LED stopta) ampullü, ampul sorunsuz kısılır. Sönük Amerikan park görüntüsü önde ve arkada çalışmalı. Dimmwert için 30 ile başla, beğenmezsen 20–50 arası dene. 2013 makyaj öncesi araç, rehber uygun.",
+engine:"Senin motorun 1.4 TSI ACT (silindir kapatmalı) 140 hp."
+};
+
+const ABBR=[
+["VL","Ön sol","vorne links"],["VR","Ön sağ","vorne rechts"],["HL","Arka sol","hinten links"],["HR","Arka sağ","hinten rechts"],
+["BLK","Sinyal","Blinker"],["TFL","Gündüz farı","Tagfahrlicht"],["SL","Park / Arka lamba","Standlicht / Schlusslicht"],["AL","Kısa far","Abblendlicht"],
+["FL","Uzun far","Fernlicht"],["NSW / NL","Ön sis farı","Nebelscheinwerfer"],["NSL","Arka sis","Nebelschlusslicht"],["BR / BL","Fren (stop)","Bremslicht"],
+["RFL","Geri vites lambası","Rückfahrlicht"],["KZL","Plaka lambası","Kennzeichenleuchte"],["ABL","Dönüş (viraj) lambası","Abbiegelicht"],["SBL","Yan sinyal (ayna)","Seitenblinker"],
+["HBL","3. stop lambası","Hochgesetzte Bremsleuchte"],["Lasttyp","Lamba/yük tipi","Load type"],["Dimmwert","Parlaklık 0–127","Dim value"],["Lichtfunktion","Kanalın görevi (A–H)","Light function"]
+];
+
+const norm=s=>(s||"").toLocaleLowerCase("tr").replace(/[ıi̇]/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const confTxt={ok:"Birden çok kaynakta doğrulandı",mixed:"Kaynaklar çelişiyor / tek kaynak"};
+const riskTxt={low:"Düşük risk",mid:"Orta risk",high:"Yüksek risk"};
+const CATS=["Tümü","Aydınlatma","Konfor","Kilit","Silecek","Gösterge","Multimedya","Sürüş","Genel","Notlarım"];
+const PLATS=["Leon 5F (benim)","Tümü","MQB","PQ"];
+let st={q:"",cat:"Tümü",plat:"Leon 5F (benim)"};
+
+function loadMine(){try{return JSON.parse(localStorage.getItem("vcds-notes")||"[]")}catch(e){return []}}
+function saveMine(a){try{localStorage.setItem("vcds-notes",JSON.stringify(a))}catch(e){}}
+
+function chips(el,arr,key){
+  arr.forEach(v=>{const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=v;
+    b.setAttribute("aria-pressed",String(st[key]===v));
+    b.onclick=()=>{st[key]=v;el.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(c.textContent===v)));render()};
+    el.appendChild(b)});
+}
+
+function mineAsEntries(){
+  return loadMine().map((m,i)=>({id:"mine-"+i,mine:i,cat:"Notlarım",title:m.title,plat:[m.plat],mod:m.mod,modName:"Kendi notun",how:m.ch||"",
+    tags:["not","benim"],key:[],path:[],ch:m.ch?[[m.ch,""]]:[],vals:[],effect:m.note,warn:"",risk:"low"}));
+}
+
+function score(e,words){
+  if(!words.length) return 1;
+  const hay=norm([e.title,e.cat,e.mod,e.modName,e.how,...e.tags,...e.key,...e.ch.map(c=>c[0]+" "+c[1])].join(" "));
+  let s=0;for(const w of words){if(!hay.includes(w)) return 0; s+= norm(e.tags.join(" ")).includes(w)?3:1; if(norm(e.title).includes(w)) s+=2;}
+  return s;
+}
+
+function card(e){
+  const steps=e.path.length?`<div><h4>Nereye gireceksin</h4><ol class="path">${e.path.map(p=>`<li>${esc(p)}</li>`).join("")}</ol></div>`:"";
+  const keys=e.key.length?`<div><h4>VCDS arama kutusuna yaz</h4><div class="meta">${e.key.map(k=>`<code>${esc(k)}</code>`).join("")}</div></div>`:"";
+  const ch=e.ch.length?`<div><h4>Kanallar</h4><div class="tblw"><table><thead><tr><th>Kanal</th><th>Ne işe yarar</th></tr></thead><tbody>${e.ch.map(c=>`<tr><td>${esc(c[0])}</td><td>${esc(c[1])}</td></tr>`).join("")}</tbody></table></div></div>`:"";
+  const vals=e.vals.length?`<div><h4>Değiştirirsen ne olur</h4><div class="tblw"><table><thead><tr><th>Değer</th><th>Sonuç</th></tr></thead><tbody>${e.vals.map(v=>`<tr><td>${esc(v[0])}</td><td>${esc(v[1])}</td></tr>`).join("")}</tbody></table></div></div>`:"";
+  const eff=e.effect?`<div><h4>${e.mine!==undefined?"Notun":"Sonuç"}</h4><div>${esc(e.effect)}</div></div>`:"";
+  const leon=LEON[e.id]?`<div class="leon"><b>Senin Leon'unda:</b> ${esc(LEON[e.id])}</div>`:"";
+  const imgs=e.imgs?`<div><h4>VCDS ekran görüntüleri</h4><div class="figs">${e.imgs.map(i=>`<figure><a href="${esc(i[0])}" target="_blank" rel="noopener"><img src="${esc(i[0])}" alt="${esc(i[1])}" loading="lazy" width="641" height="458"></a><figcaption>${esc(i[1])}</figcaption></figure>`).join("")}</div></div>`:"";
+  const test=e.test?`<div><h4>Test sonucu</h4><div>${esc(e.test)}</div></div>`:"";
+  const conf=e.conf?`<div class="meta"><span class="tag conf-${e.conf}">${confTxt[e.conf]}</span></div>`:"";
+  const warn=e.warn?`<div class="warn"><b>Dikkat:</b> ${esc(e.warn)}</div>`:"";
+  const src=e.src&&e.src.length?`<div><h4>Kaynak</h4><div class="meta">${e.src.map(x=>`<a class="tag" href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])}</a>`).join("")}</div></div>`:"";
+  const del=e.mine!==undefined?`<button class="btn ghost" type="button" data-del="${e.mine}">Notu sil</button>`:"";
+  return `<details class="card" id="c-${esc(e.id)}"><summary><div class="mod">${esc(e.mod)}</div><div class="st"><h3>${esc(e.title)}</h3><small>${esc(e.modName)} · ${esc(e.how)} · ${esc(e.plat.join(" / "))}</small></div><span class="risk r-${e.risk}">${riskTxt[e.risk]}</span></summary><div class="body">${steps}${keys}${ch}${vals}${conf}${test}${eff}${imgs}${leon}${warn}${src}${del}</div></details>`;
+}
+
+function render(){
+  const words=norm(st.q).split(/\s+/).filter(Boolean);
+  let all=DATA.concat(mineAsEntries());
+  let res=all.map(e=>({e,s:score(e,words)})).filter(x=>x.s>0)
+    .filter(x=>st.cat==="Tümü"||x.e.cat===st.cat)
+    .filter(x=>st.plat==="Tümü"||x.e.plat.includes(st.plat)||x.e.plat.includes("Genel")||(st.plat.startsWith("Leon")&&x.e.plat.includes("MQB")))
+    .sort((a,b)=>b.s-a.s);
+  const list=document.getElementById("list");
+  list.innerHTML=res.length?res.map(x=>card(x.e)).join(""):`<div class="empty">“${esc(st.q)}” için kayıt yok. Başka bir kelime dene (ör. <b>far</b>, <b>sinyal</b>, <b>kilit</b>) veya aşağıdan kendi notunu ekle.</div>`;
+  if(words.length&&res.length&&res.length<=3) list.querySelectorAll("details").forEach(d=>d.open=true);
+  document.getElementById("count").textContent=`${res.length} kayıt`+(words.length?` · “${st.q}”`:"");
+  list.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{const a=loadMine();a.splice(+b.dataset.del,1);saveMine(a);render()});
+  const ab=document.getElementById("abgrid");
+  const abf=words.length?ABBR.filter(a=>words.every(w=>norm(a.join(" ")).includes(w))):ABBR;
+  ab.innerHTML=(abf.length?abf:ABBR).map(a=>`<div class="ab"><b>${esc(a[0])}</b><span>${esc(a[1])} <i>${esc(a[2])}</i></span></div>`).join("");
+}
+
+document.querySelectorAll("#imgtabs .chip").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("#imgtabs .chip").forEach(c=>c.setAttribute("aria-pressed",String(c===b)));
+  document.querySelectorAll(".figs").forEach(f=>f.hidden=f.dataset.set!==b.dataset.set);});
+const totop=document.getElementById("totop");
+addEventListener("scroll",()=>{totop.hidden=scrollY<500},{passive:true});
+totop.onclick=()=>{scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});setTimeout(()=>q.focus({preventScroll:true}),350)};
+chips(document.getElementById("cats"),CATS,"cat");
+chips(document.getElementById("plats"),PLATS,"plat");
+const q=document.getElementById("q");
+q.addEventListener("input",()=>{st.q=q.value;render()});
+document.getElementById("clr").onclick=()=>{q.value="";st.q="";render();q.focus()};
+document.querySelectorAll(".hint b[data-q]").forEach(b=>b.onclick=()=>{q.value=b.dataset.q;st.q=b.dataset.q;render()});
+document.getElementById("addf").addEventListener("submit",ev=>{ev.preventDefault();
+  const v=id=>document.getElementById(id).value.trim();
+  const a=loadMine();a.push({title:v("a-title"),mod:v("a-mod"),ch:v("a-ch"),plat:v("a-plat"),note:v("a-note")});saveMine(a);
+  ev.target.reset();st.cat="Tümü";document.querySelectorAll("#cats .chip").forEach(c=>c.setAttribute("aria-pressed",String(c.textContent==="Tümü")));
+  q.value="";st.q="";render();});
+q.value="far";st.q="far";render();
+</script>
+
+<script>
+if("serviceWorker" in navigator){addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{});
+ let r=false;navigator.serviceWorker.addEventListener("controllerchange",()=>{if(!r){r=true;location.reload()}});});}
+</script>
+</body>
+</html>

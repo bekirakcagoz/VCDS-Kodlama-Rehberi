@@ -1,0 +1,29 @@
+{
+ "name": "VCDS Kodlama Rehberi",
+ "short_name": "VCDS Rehberi",
+ "description": "SEAT Leon 5F / MQB için VCDS kodlama rehberi",
+ "lang": "tr",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#11161c",
+ "theme_color": "#18202a",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  },
+  {
+   "src": "icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
