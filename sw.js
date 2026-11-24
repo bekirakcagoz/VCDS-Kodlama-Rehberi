@@ -1,4 +1,4 @@
-const CACHE="vcds-41bf3720a2";
+const CACHE="vcds-274a18e085";
 const FILES=["./", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "img/arka-halojen.jpg", "img/arka-led.png", "img/on-halojen.png", "img/on-led.png", "img/us-1.jpg", "img/us-2.jpg", "img/us-3.jpg", "img/us-4.jpg", "index.html", "manifest.webmanifest"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&k.startsWith("vcds-")).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
