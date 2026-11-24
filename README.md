@@ -2,7 +2,7 @@
 
 SEAT Leon 5F (MQB) için VCDS kodlama rehberi: modül, kanal, değer ve değiştirince ne olacağı.
 
-**Uygulama:** https://bekirakcagoz.github.io/vcds-kodlama-rehberi/
+**Uygulama:** https://bekirakcagoz.github.io/VCDS-Kodlama-Rehberi/
 
 ## Telefona kurulum
 - **iPhone:** Linki Safari'de aç → Paylaş → "Ana Ekrana Ekle".
